@@ -1,11 +1,11 @@
-# Split the G — Design Spec
+# Ale Parade Challenge — Design Spec
 
 **Date:** 2026-06-09
 **Status:** Approved pending review
 
 ## What it is
 
-A shared webapp for a friend group to tally successful "G splits" on Guinness pints (first sip lands the beer line through the middle of the G on the glass). Replaces a shared iCloud Notes file. One URL, everyone uses it from their phone at the pub.
+**Ale Parade Challenge** is a shared webapp for a friend group to tally successful "G splits" on Guinness pints (first sip lands the beer line through the middle of the G on the glass). Replaces a shared iCloud Notes file. One URL, everyone uses it from their phone at the pub.
 
 ## Core decisions
 
