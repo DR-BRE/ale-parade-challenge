@@ -17,7 +17,7 @@
 ## Stack
 
 - **Frontend:** Next.js (App Router), deployed on Vercel.
-- **Backend:** Supabase free tier — Postgres for data, Storage for profile photos, Realtime for live updates.
+- **Backend:** Supabase free tier — Postgres for data, Realtime for live updates. (No Storage: photos are small data URLs, see below.)
 - **API:** Next.js route handlers. Clients never write to the database directly; routes verify the device secret. Reads (leaderboard, feed) are public.
 
 ## Screens
@@ -42,19 +42,24 @@ Theme colors are oklch CSS variables. The design-time tweaks (background warmth 
 ## Data model
 
 ```
-profiles
+profiles                       -- public read
   id          uuid pk
   name        text
-  photo_url   text
-  secret_hash text        -- hash of the device secret
+  photo_url   text             -- small JPEG data URL
   created_at  timestamptz
 
-splits
+profile_secrets                -- no client access (RLS: no policies)
+  profile_id  uuid pk fk -> profiles
+  secret_hash text             -- sha256 of the device secret
+
+splits                         -- public read
   id          uuid pk
   profile_id  uuid fk -> profiles
-  delta       int         -- +1 or -1
+  delta       int              -- +1 or -1
   created_at  timestamptz
 ```
+
+Secrets live in their own table so the publicly-readable `profiles` rows never carry them.
 
 A person's count is the sum of their deltas (floored at 0 in the UI). The `splits` table doubles as the per-person pour breakdown and makes undo free. Breakdown timestamps render as relative time ("Just now", "4h ago", "2d ago").
 
@@ -68,7 +73,7 @@ A person's count is the sum of their deltas (floored at 0 in the UI). The `split
 
 - **Optimistic UI:** +1/−1 update the count immediately; on failure, roll back and show a toast.
 - **Realtime:** other devices' leaderboard and breakdowns update live when anyone logs a split.
-- **Photo uploads** go to Supabase Storage; store the public URL on the profile.
+- **Photos:** downscaled client-side to a 192px square JPEG data URL (~10–15 KB, as in the prototype) and stored directly in `profiles.photo_url`. No Supabase Storage needed at this scale.
 
 ## Testing
 
