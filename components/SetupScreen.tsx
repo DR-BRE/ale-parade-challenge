@@ -46,6 +46,8 @@ export default function SetupScreen({ onDone }: { onDone: (identity: Identity) =
         throw new Error(data?.error || "Could not create your profile");
       }
       const { profile, secret } = await res.json();
+      // Intentional: busy stays true on success; the parent unmounts this
+      // component when onDone fires. No .finally reset needed.
       onDone({ profileId: profile.id, secret });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not create your profile");
