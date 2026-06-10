@@ -22,6 +22,8 @@ function serviceClient() {
   );
 }
 
+// Two inserts, no transaction: a failure between them leaves a ghost profile
+// (visible, never incrementable). Accepted at friends-app scale; clean up via dashboard.
 export async function createProfile(args: {
   name: string;
   photoUrl: string | null;
