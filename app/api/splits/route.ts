@@ -24,6 +24,8 @@ export async function POST(req: Request): Promise<Response> {
     return Response.json({ error: "Not your pint" }, { status: 401 });
   }
 
+  // Check-then-act: two concurrent -1s can drive the sum to -1. Accepted —
+  // owner-only, cosmetic (UI floors at 0), self-healing on the next +1.
   if (delta === -1) {
     const count = await getCount(profileId);
     if (count <= 0) {

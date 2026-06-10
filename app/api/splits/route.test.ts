@@ -68,6 +68,20 @@ describe("POST /api/splits", () => {
     expect((await POST(request("1"))).status).toBe(400);
   });
 
+  it("rejects malformed JSON", async () => {
+    const bad = new Request("http://test/api/splits", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-profile-id": "p1",
+        "x-profile-secret": SECRET,
+      },
+      body: "{not json",
+    });
+    expect((await POST(bad)).status).toBe(400);
+    expect(mockInsert).not.toHaveBeenCalled();
+  });
+
   it("rejects an undo when the count is zero", async () => {
     mockCount.mockResolvedValue(0);
     expect((await POST(request(-1))).status).toBe(409);
