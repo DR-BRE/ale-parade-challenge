@@ -22,13 +22,22 @@
 
 ## Screens
 
-1. **Profile setup** (first visit only): name field, photo upload, one button. Creates the profile, stores the device secret, drops you on the leaderboard.
-2. **Leaderboard (home):** everyone ranked by split count — photo, name, big number. Gold treatment for #1. Your own row has a prominent **+1 "Split it!"** button and a small **−1** undo. +1 triggers a brief pint/foam celebration animation.
-3. **Activity feed** (below the leaderboard): recent entries like "Brett split the G — 2h ago", including undos. Live-updates via Supabase Realtime.
+The UI was designed in Claude Design; the handoff prototype (HTML + JSX) is the visual source of truth. Where this section and the prototype disagree, the prototype wins.
+
+1. **Profile setup** (first visit only): crest lockup, circular photo uploader with dashed gold ring, single name input, one **"Pour me in"** button (disabled until a name is entered). Creates the profile, stores the device secret, drops you on the leaderboard.
+2. **Leaderboard (home):** everyone ranked by split count — rank numeral, circular photo, name, big serif number. #1 gets gold double border, gold rank/count, and a tilted gold crown; leader's name renders at 24px, everyone else 22px. No "You" badge — your own row reads as yours by being inverted (stout-dark card, cream text) with a full-width action bar: a small **−1** undo and the prominent **+1 "Split it!"** button. +1 plays a "pour" animation inside the button (stout fills from the bottom, foam band settles with a wobble, gold ring flash) and the count pops.
+3. **Per-person pour breakdown:** every row has a chevron to the right of the score. Tapping it expands that person's history inline ("Split the G — 2h ago"; undos as italic "Took one back"). Anyone can view anyone's breakdown; one row open at a time. Empty history shows "No pours yet."
+4. **Empty leaderboard state:** "No one's split the G yet. Tragic." with a subline, shown when all counts are zero.
+
+There is no separate activity feed — the per-person breakdowns replaced it during design iteration.
 
 ## Visual direction
 
-Guinness pub theme: stout-dark background (near-black with warm brown), creamy foam off-white for text and surfaces, gold accents (harp / crest energy), classic pub typography. Mobile-first — this gets used standing at a bar.
+Guinness pub theme, per the prototype: stout-dark warm background, foam-cream cards with stout text (pub-mirror inversion), gold accents. Playfair Display for headings/numbers, Source Sans 3 for body. Crest lockup: "EST. 1759 / Ale Parade Challenge / Split-the-G Tally" between gold rules with diamond accents; footer note "First sip decides".
+
+**Pint backdrop:** the page background is an animated settling pour — cream foam head across the top with a `feTurbulence`-roughened organic edge that bobs, a tan settle zone collapsing into a near-black stout body with a ruby glow, downward-streaming micro-bubble cascade lanes, and sparse sinking nitro bubbles. All animation honors `prefers-reduced-motion`. Content floats above it; the leaderboard starts below the foam head.
+
+Theme colors are oklch CSS variables. The design-time tweaks (background warmth 60, gold intensity 65) are baked in as the fixed theme; the prototype's Tweaks panel is a design-tool affordance and is **not** part of the product. Mobile-first (max-width 480px column) — this gets used standing at a bar.
 
 ## Data model
 
@@ -47,7 +56,7 @@ splits
   created_at  timestamptz
 ```
 
-A person's count is the sum of their deltas (floored at 0 in the UI). The `splits` table doubles as the activity feed and makes undo free.
+A person's count is the sum of their deltas (floored at 0 in the UI). The `splits` table doubles as the per-person pour breakdown and makes undo free. Breakdown timestamps render as relative time ("Just now", "4h ago", "2d ago").
 
 ## API routes
 
@@ -58,7 +67,7 @@ A person's count is the sum of their deltas (floored at 0 in the UI). The `split
 ## Behavior details
 
 - **Optimistic UI:** +1/−1 update the count immediately; on failure, roll back and show a toast.
-- **Realtime:** other devices' leaderboard and feed update live when anyone logs a split.
+- **Realtime:** other devices' leaderboard and breakdowns update live when anyone logs a split.
 - **Photo uploads** go to Supabase Storage; store the public URL on the profile.
 
 ## Testing
@@ -66,6 +75,10 @@ A person's count is the sum of their deltas (floored at 0 in the UI). The `split
 - Unit tests on the API routes: secret verification, delta validation, floor-at-zero rule.
 - UI verified manually (it originates from Claude Design).
 
+## Design handoff
+
+The Claude Design export lives in the repo under `design/` (README, chat transcript, and the prototype: `Ale Parade Challenge.html`, `ale-app.jsx`, `ale-components.jsx`, `tweaks-panel.jsx`). The prototype is reference material — recreate its visual output in the production stack; don't ship its internals (Babel-in-browser, window globals, localStorage-only state, the Tweaks panel).
+
 ## Out of scope
 
-Attempts/success rates, locations, photos of pints, multiple groups, profile recovery, editing other people's scores, admin tools.
+Attempts/success rates, locations, photos of pints, multiple groups, profile recovery, editing other people's scores, admin tools, activity feed (replaced by per-person breakdowns), the design-tool Tweaks panel.
