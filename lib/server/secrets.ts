@@ -9,7 +9,6 @@ export function hashSecret(secret: string): string {
 }
 
 export function safeEqualHex(a: string, b: string): boolean {
-  const bufA = Buffer.from(a, "hex");
-  const bufB = Buffer.from(b, "hex");
-  return bufA.length === bufB.length && timingSafeEqual(bufA, bufB);
+  if (!/^[0-9a-f]{64}$/.test(a) || !/^[0-9a-f]{64}$/.test(b)) return false;
+  return timingSafeEqual(Buffer.from(a, "hex"), Buffer.from(b, "hex"));
 }

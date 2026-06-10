@@ -18,5 +18,8 @@ describe("secrets", () => {
     expect(safeEqualHex(h, hashSecret("pint"))).toBe(true);
     expect(safeEqualHex(h, hashSecret("stout"))).toBe(false);
     expect(safeEqualHex(h, "abc1")).toBe(false); // length mismatch must not throw
+    expect(safeEqualHex(h, h + "a")).toBe(false); // odd-length truncation bypass
+    expect(safeEqualHex(h, h.slice(0, 63) + "z")).toBe(false); // invalid hex char
+    expect(safeEqualHex(h.toUpperCase(), h)).toBe(false); // uppercase is rejected by the strict gate
   });
 });
