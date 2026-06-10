@@ -33,6 +33,8 @@ export function useBoard(identity: Identity): Board {
     ]);
     if (!p.error && p.data) setProfiles(p.data);
     if (!s.error && s.data) setSplits(s.data);
+    // Without this, a failed initial load would leave `loading` stuck forever.
+    if (p.error) setError("Couldn't load the board — check your connection and refresh");
   }, []);
 
   React.useEffect(() => {
