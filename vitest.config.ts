@@ -5,7 +5,7 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["**/*.test.ts"],
-    exclude: ["node_modules/**", ".next/**", "design/**"],
+    exclude: ["node_modules/**", ".next/**", "**/design/**"],
   },
   resolve: {
     alias: { "@": path.resolve(__dirname) },
