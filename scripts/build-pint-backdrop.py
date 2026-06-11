@@ -19,12 +19,18 @@ import subprocess, sys, tempfile, glob, os
 from PIL import Image, ImageFilter, ImageDraw, ImageChops, ImageOps
 import numpy as np
 
+# The mask is built in 810x1440 space (where these constants were calibrated)
+# and resized to the source video's resolution for compositing.
 W, H = 810, 1440
 BAND_Y = 590          # top of the tray/bar band kept as video
 RIM_TOP = 168         # nothing above this is glass
-RIM_CLAMP = (138, 702)   # max glass extent in the rim zone (y < 320)
+RIM_CLAMP = (146, 702)   # max glass extent in the rim zone (y < 320)
 BODY_CLAMP = (105, 715)  # max glass extent in the body zone (320..BAND_Y)
 HOLE_SPLIT_Y = 310    # interior holes below = churn (video), above = rim gap (photo)
+# The bright specular streak on the glass's left wall refracts the moving
+# background, so motion segmentation rejects it; reclaim it explicitly.
+STREAK_ZONE = (112, 285, 300, BAND_Y)  # x0, x1, y0, y1
+STREAK_LUM = 188
 
 def fill_holes(img):
     ff = img.copy()
@@ -85,7 +91,13 @@ def build_mask(frames_dir):
         for x in (1, W - 2):
             if bi.getpixel((x, y)) == 255: ImageDraw.floodfill(bi, (x, y), 128)
     wall = np.asarray(bi) == 128
-    comp = Image.fromarray(((ca & ~wall) * 255).astype(np.uint8))
+    kept = ca & ~wall
+
+    # reclaim the left-wall specular streak (see STREAK_ZONE note above)
+    x0, x1, y0, y1 = STREAK_ZONE
+    streak = np.zeros_like(kept)
+    streak[y0:y1, x0:x1] = lum[y0:y1, x0:x1] > STREAK_LUM
+    comp = Image.fromarray(((kept | streak) * 255).astype(np.uint8))
 
     g = comp.filter(ImageFilter.MaxFilter(17))  # ~8px outward: recapture the rim
     ImageDraw.Draw(g).rectangle([0, BAND_Y, W, H], fill=255)
@@ -105,22 +117,31 @@ def build_mask(frames_dir):
     g = Image.fromarray(np.where((fa == 128) | (fa == 60), 0, fa).astype(np.uint8))
     return g.filter(ImageFilter.GaussianBlur(5))
 
-def prep_photo(path):
+def prep_photo(path, w, h):
     bg = Image.open(path).convert('RGB')
-    s = W / bg.width
-    bg = bg.resize((W, round(bg.height * s)), Image.LANCZOS)
-    top = (bg.height - H) // 2
-    # 4px blur sits the photo in the footage's depth of field
-    return bg.crop((0, top, W, top + H)).filter(ImageFilter.GaussianBlur(4))
+    s = w / bg.width
+    bg = bg.resize((w, round(bg.height * s)), Image.LANCZOS)
+    top = (bg.height - h) // 2
+    # blur sits the photo in the footage's depth of field (4px at 810 wide)
+    return bg.crop((0, top, w, top + h)).filter(ImageFilter.GaussianBlur(4 * w / W))
+
+def src_dims(src):
+    out = subprocess.run(['ffprobe', '-v', 'error', '-select_streams', 'v:0',
+                          '-show_entries', 'stream=width,height', '-of', 'csv=p=0', src],
+                         check=True, capture_output=True, text=True).stdout
+    w, h = map(int, out.strip().split(','))
+    return w, h
 
 def main():
     src, photo, out = sys.argv[1:4]
+    sw, sh = src_dims(src)
     with tempfile.TemporaryDirectory() as td:
+        # mask is built in 810x1440 space regardless of source resolution
         subprocess.run(['ffmpeg', '-y', '-v', 'error', '-i', src,
-                        '-vf', 'fps=2', os.path.join(td, 'f%02d.png')], check=True)
+                        '-vf', f'fps=2,scale={W}:{H}', os.path.join(td, 'f%02d.png')], check=True)
         mask_p, bg_p = os.path.join(td, 'mask.png'), os.path.join(td, 'bg.png')
-        build_mask(td).save(mask_p)
-        prep_photo(photo).save(bg_p)
+        build_mask(td).resize((sw, sh), Image.LANCZOS).save(mask_p)
+        prep_photo(photo, sw, sh).save(bg_p)
         subprocess.run(['ffmpeg', '-y', '-v', 'error', '-i', src,
                         '-loop', '1', '-i', bg_p, '-loop', '1', '-i', mask_p,
                         '-filter_complex',
