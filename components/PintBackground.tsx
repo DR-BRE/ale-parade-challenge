@@ -33,16 +33,14 @@ export default function PintBackground() {
           <feDisplacementMap in="SourceGraphic" in2="n" scale="26" xChannelSelector="R" yChannelSelector="G" />
         </filter>
       </svg>
-      <div className="surge">
-        <div className="surge-layer sg-a" />
-        <div className="surge-layer sg-b" />
-        <div className="surge-layer sg-c" />
-      </div>
       <div className="cascade-fade">
         <div className="cascade-streaks">
           <div className="cascade-layer cl-a" />
           <div className="cascade-layer cl-b" />
         </div>
+        <div className="cascade-layer cl-c" />
+        <div className="ripple rp-a" />
+        <div className="ripple rp-b" />
       </div>
       <div className="bubbles">
         {bubbles.map((b, i) => (
