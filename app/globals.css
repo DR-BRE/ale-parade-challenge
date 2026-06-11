@@ -20,12 +20,16 @@
   --gold-glow: oklch(0.79 0.1083 85 / 0.45);
 }
 * { box-sizing: border-box; }
-html, body { margin: 0; padding: 0; }
+/* App shell: the document never scrolls — .stage is the only scroller.
+   A scrollable (or overscrollable) document on mobile lets a fling sail
+   past the content into a viewport of bare body background. */
+html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; overscroll-behavior: none; }
 body { background: #14100b; }
 
 .stage {
-  min-height: 100vh;
-  min-height: 100dvh;
+  height: 100vh;
+  height: 100dvh;
+  overflow-y: auto;
   display: flex;
   justify-content: center;
   background:
@@ -41,7 +45,12 @@ body { background: #14100b; }
   position: relative;
   z-index: 1;
 }
-.setup { min-height: calc(100vh - 190px); min-height: calc(100dvh - 190px); }
+/* 190px = .app vertical padding (142 top + 48 bottom); the safe-area term
+   mirrors the env() in .app's bottom padding so setup fits 100dvh exactly. */
+.setup {
+  min-height: calc(100vh - 190px);
+  min-height: calc(100dvh - 190px - env(safe-area-inset-bottom, 0px));
+}
 
 /* ---------- Pint backdrop: settling pint on the bar ---------- */
 .pint-bg {
