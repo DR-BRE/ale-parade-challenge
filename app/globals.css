@@ -130,27 +130,89 @@ body { background: #14100b; }
   line-height: 1;
 }
 
+/* ---------- Liquid glass primitives ----------
+   Shared recipe for components/ui/glass-button.tsx and the leaderboard
+   tiles: stout-tinted translucency over the pint footage, a gold seam,
+   and cream specular edges (light from above, like the pub lamps). */
+.glass-button-wrap { position: relative; display: inline-block; border-radius: 999px; }
+.glass-button {
+  appearance: none; -webkit-appearance: none;
+  border: none; margin: 0; padding: 0; background: none;
+  font: inherit; color: var(--cream);
+  -webkit-tap-highlight-color: transparent;
+  position: relative; z-index: 2; display: block;
+  border-radius: 999px; cursor: pointer;
+  background: linear-gradient(135deg,
+    oklch(0.36 0.05 70 / 0.4) 0%,
+    oklch(0.24 0.03 62 / 0.2) 50%,
+    oklch(0.4 0.08 85 / 0.32) 100%);
+  -webkit-backdrop-filter: blur(12px) saturate(1.6);
+  backdrop-filter: blur(12px) saturate(1.6);
+  box-shadow:
+    inset 0 1px 0 oklch(0.93 0.022 88 / 0.3),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.3),
+    inset 0 0 0 1px oklch(0.79 0.1083 85 / 0.3);
+  transition: transform .12s ease, box-shadow .2s ease;
+}
+.glass-button:hover {
+  box-shadow:
+    inset 0 1px 0 oklch(0.93 0.022 88 / 0.4),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.3),
+    inset 0 0 0 1px oklch(0.79 0.1083 85 / 0.55);
+}
+.glass-button:active { transform: scale(0.97); }
+.glass-button-text {
+  display: block; padding: 14px 24px;
+  font-family: var(--serif); font-weight: 700;
+  user-select: none; -webkit-user-select: none;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+.glass-button-shadow {
+  position: absolute; inset: 0; z-index: 1; border-radius: 999px;
+  box-shadow:
+    0 14px 30px -12px rgba(0, 0, 0, 0.65),
+    0 6px 16px -8px var(--gold-glow);
+}
+
 /* ---------- Leaderboard ---------- */
 .board { display: flex; flex-direction: column; gap: 10px; margin-top: 22px; }
 .row {
   display: flex; flex-wrap: wrap; align-items: center; gap: 14px;
-  background: var(--cream);
-  color: var(--stout);
-  border-radius: 14px;
+  color: var(--cream);
+  border-radius: 18px;
   padding: 12px 16px 12px 12px;
-  border: 1px solid rgba(0,0,0,0.25);
-  box-shadow: 0 2px 0 rgba(0,0,0,0.3);
   position: relative;
+  /* Liquid glass tile: the settling pint refracts through it */
+  background: linear-gradient(135deg,
+    oklch(0.34 0.045 62 / 0.4) 0%,
+    oklch(0.22 0.03 60 / 0.22) 45%,
+    oklch(0.32 0.06 80 / 0.3) 100%);
+  -webkit-backdrop-filter: blur(14px) saturate(1.5);
+  backdrop-filter: blur(14px) saturate(1.5);
+  border: 1px solid oklch(0.79 0.1083 85 / 0.3);
+  box-shadow:
+    inset 0 1px 0 oklch(0.93 0.022 88 / 0.22),
+    inset 1px 0 0 oklch(0.93 0.022 88 / 0.07),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.28),
+    0 10px 26px -10px rgba(0, 0, 0, 0.55);
+}
+/* No backdrop-filter (old browsers): near-opaque stout so text stays legible */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .row {
+    background: linear-gradient(135deg,
+      oklch(0.3 0.04 62 / 0.94) 0%, oklch(0.2 0.03 60 / 0.94) 100%);
+  }
 }
 .row .rank {
   font-family: var(--serif); font-weight: 700; font-style: italic;
   width: 22px; text-align: center; flex: none;
-  color: var(--stout-faint); font-size: 17px;
+  color: var(--cream-dim); font-size: 17px;
 }
 .row .who { flex: 1; min-width: 0; }
 .row .name {
   font-family: var(--serif); font-weight: 700; font-size: 19px;
   line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
 }
 .row .count {
   font-family: var(--serif); font-weight: 900; font-size: 36px;
@@ -160,38 +222,41 @@ body { background: #14100b; }
 .count-pop { animation: countPop 0.8s cubic-bezier(.2,1.4,.4,1) both; }
 @keyframes countPop {
   0% { transform: scale(1); }
-  30% { transform: scale(1.35); color: var(--gold-deep); }
+  30% { transform: scale(1.35); color: var(--gold); }
   100% { transform: scale(1); }
 }
 
-/* #1 gold treatment */
+/* #1 gold treatment: same glass, warmer pour and a gold seam that glows */
 .row.leader {
-  border: 1px solid var(--gold-deep);
+  border: 1px solid oklch(0.79 0.1083 85 / 0.65);
+  background: linear-gradient(115deg,
+    oklch(0.4 0.07 80 / 0.42) 0%,
+    oklch(0.27 0.045 70 / 0.26) 55%,
+    oklch(0.5 0.1 85 / 0.34) 100%);
   box-shadow:
-    0 0 0 3px var(--cream-edge),
-    0 0 0 4px var(--gold-deep),
-    0 4px 18px -4px var(--gold-glow);
-  background:
-    linear-gradient(115deg, var(--cream) 55%, var(--cream-gold) 100%);
+    inset 0 1px 0 oklch(0.93 0.022 88 / 0.35),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.28),
+    inset 0 0 22px -8px var(--gold-glow),
+    0 0 24px -6px var(--gold-glow),
+    0 10px 26px -10px rgba(0, 0, 0, 0.55);
 }
-.row.leader .rank { color: var(--gold-deep); font-style: normal; }
-.row.leader .count { color: var(--gold-deep); }
+.row.leader .rank { color: var(--gold); font-style: normal; }
+.row.leader .count { color: var(--gold); }
 .crown {
   position: absolute; top: -11px; left: 40px;
   width: 26px; height: 17px; transform: rotate(-12deg);
   color: var(--gold); filter: drop-shadow(0 1px 1px rgba(0,0,0,0.45));
 }
 
-/* Your row — inverted */
+/* Your row — darker pour, solid gold seam */
 .row.you {
   flex-wrap: wrap;
-  background: linear-gradient(180deg, var(--stout-card) 0%, var(--stout-card-deep) 100%);
-  color: var(--cream);
+  background: linear-gradient(180deg,
+    oklch(0.27 0.03 62 / 0.52) 0%,
+    oklch(0.17 0.025 62 / 0.46) 100%);
   border: 1px solid var(--gold-deep);
-  box-shadow: 0 4px 14px -4px rgba(0,0,0,0.6);
   padding-bottom: 14px;
 }
-.row.you .rank { color: var(--cream-dim); }
 .row.you.leader .rank { color: var(--gold); }
 .you-tag {
   display: inline-block; vertical-align: 3px; margin-left: 8px;
@@ -285,22 +350,19 @@ body { background: #14100b; }
 .expand-btn {
   flex: none; width: 34px; height: 34px; margin-left: 2px;
   border: none; border-radius: 50%; background: transparent;
-  color: var(--stout-faint); cursor: pointer;
+  color: var(--cream-dim); cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   transition: color .15s;
 }
-.expand-btn:active { color: var(--stout); }
-.row.you .expand-btn { color: var(--cream-dim); }
-.row.you .expand-btn:active { color: var(--cream); }
+.expand-btn:active { color: var(--cream); }
 .chev { width: 16px; height: 16px; transition: transform .2s ease; }
 .chev.open { transform: rotate(180deg); }
 
 .breakdown {
   flex-basis: 100%;
-  border-top: 1px solid rgba(0,0,0,0.12);
+  border-top: 1px solid var(--cream-faint);
   margin-top: 10px; padding-top: 4px;
 }
-.row.you .breakdown { border-top-color: var(--cream-faint); }
 .bd-item {
   display: flex; justify-content: space-between; align-items: baseline;
   gap: 12px; padding: 6px 2px; font-size: 14px;
