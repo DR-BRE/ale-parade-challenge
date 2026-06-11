@@ -43,88 +43,46 @@ body { background: #14100b; }
 }
 .setup { min-height: calc(100vh - 190px); min-height: calc(100dvh - 190px); }
 
-/* ---------- Pint backdrop: settling pour ---------- */
+/* ---------- Pint backdrop: settling pint on the bar ---------- */
 .pint-bg {
   position: fixed; inset: 0; z-index: 0; overflow: hidden;
   /* Fallback while the video loads or when autoplay is blocked
-     (iOS Low Power Mode): same depth as the footage, frozen. */
+     (iOS Low Power Mode): rough tonal match for the footage, frozen —
+     bright blurred pub up top, tan glass body, brass tray at the base. */
   background:
-    radial-gradient(85% 40% at 50% 14%, rgba(225, 170, 98, 0.42) 0%, rgba(0,0,0,0) 100%),
+    radial-gradient(90% 50% at 50% 42%, rgba(150, 96, 48, 0.5) 0%, rgba(0,0,0,0) 100%),
     linear-gradient(180deg,
-      #b3925f 0px,
-      #a07546 110px,
-      #76522c 28%,
-      #4d3217 48%,
-      #241204 66%,
-      #0a0503 82%,
-      #040302 100%);
+      #5a5e46 0%,
+      #7a6a4a 16%,
+      #8a6238 34%,
+      #6e4a26 56%,
+      #4a3018 74%,
+      #2a1c0e 88%,
+      #1a120a 100%);
 }
 
-/* Real settling-pour footage. Source is 512x480, so cover-scaling on a phone
-   is roughly native width; the toning scrim hides the upscale softness. */
+/* Real footage: full pint glass settling on the bar, 810x1440 portrait,
+   so cover-scaling on a phone is essentially native. No color filter —
+   the footage is already graded; the scrim below handles legibility. */
 .pint-video {
   position: absolute; inset: 0;
   width: 100%; height: 100%;
   object-fit: cover;
-  filter: saturate(0.8) brightness(0.82) contrast(1.06);
 }
 
-/* Toning scrim: pulls the bright orange footage into the stout palette —
-   warm glow up top under the foam, body clearing to black from the bottom
-   so the leaderboard sits on dark, plus an edge vignette. */
+/* Legibility scrim: dark fades top (crest) and bottom (leaderboard) with the
+   glass left clear in the middle, plus a soft edge vignette. */
 .pint-tone {
   position: absolute; inset: 0;
   background:
-    radial-gradient(120% 90% at 50% 75%, rgba(0,0,0,0) 45%, rgba(5, 2, 1, 0.55) 100%),
+    radial-gradient(130% 100% at 50% 50%, rgba(0,0,0,0) 55%, rgba(8, 5, 2, 0.45) 100%),
     linear-gradient(180deg,
-      rgba(80, 40, 12, 0.18) 0px,
-      rgba(20, 10, 4, 0.1) 120px,
-      rgba(10, 5, 2, 0.32) 45%,
-      rgba(5, 2, 1, 0.72) 72%,
-      rgba(3, 2, 1, 0.92) 100%);
-}
-
-/* Foam head: straight layers roughened into an organic edge by feTurbulence displacement */
-.foam-wrap {
-  position: absolute; top: -30px; left: -30px; right: -30px; height: 128px;
-  filter: url(#foam-rough);
-  animation: foamBob 9s ease-in-out infinite;
-  will-change: transform;
-}
-.foam-core {
-  position: absolute; inset: 0;
-  background:
-    radial-gradient(circle at 23% 88%, rgba(214, 192, 150, 0.5) 0%, rgba(0,0,0,0) 9%),
-    radial-gradient(circle at 67% 92%, rgba(214, 192, 150, 0.45) 0%, rgba(0,0,0,0) 7%),
-    radial-gradient(circle at 88% 86%, rgba(214, 192, 150, 0.4) 0%, rgba(0,0,0,0) 8%),
-    radial-gradient(circle at 44% 95%, rgba(202, 176, 130, 0.45) 0%, rgba(0,0,0,0) 10%),
-    linear-gradient(180deg,
-      #faf5ea 0%,
-      #f5edde 45%,
-      #eee2c8 70%,
-      #dfcca6 87%,
-      #cbb080 96%,
-      #b3925f 100%);
-  box-shadow: 0 10px 26px -8px rgba(20, 10, 4, 0.55);
-}
-.foam-core::before {
-  /* fine pore texture in the head */
-  content: ""; position: absolute; inset: 0;
-  background-image:
-    radial-gradient(circle at 7px 11px, rgba(255, 252, 244, 0.5) 1px, rgba(0,0,0,0) 1.8px),
-    radial-gradient(circle at 19px 4px, rgba(189, 165, 126, 0.14) 1.2px, rgba(0,0,0,0) 2px),
-    radial-gradient(circle at 13px 22px, rgba(255, 252, 244, 0.35) 0.8px, rgba(0,0,0,0) 1.5px);
-  background-size: 26px 29px;
-  filter: blur(0.5px);
-  animation: foamChurn 16s ease-in-out infinite alternate;
-}
-@keyframes foamChurn {
-  from { transform: translateX(0); }
-  to { transform: translateX(-22px); }
-}
-@keyframes foamBob {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(4px); }
+      rgba(10, 6, 3, 0.72) 0px,
+      rgba(10, 6, 3, 0.42) 150px,
+      rgba(0, 0, 0, 0) 340px,
+      rgba(0, 0, 0, 0) 58%,
+      rgba(8, 5, 2, 0.5) 80%,
+      rgba(6, 4, 2, 0.78) 100%);
 }
 
 /* ---------- Crest / lockup ---------- */
@@ -435,6 +393,5 @@ body { background: #14100b; }
 @media (prefers-reduced-motion: reduce) {
   .pour, .pour-liquid, .pour-foam, .pour-ring, .pour-label, .count-pop { animation: none !important; }
   .pour { opacity: 0; }
-  .foam-wrap, .foam-core::before { animation: none !important; }
   /* .pint-video is paused via JS in PintBackground when reduced motion is set */
 }

@@ -2,9 +2,8 @@
 
 import React from "react";
 
-// Full-screen "pint" backdrop: real settling-pour footage looped behind a
-// toning scrim that pulls it into the app's stout palette, topped with the
-// foam head (noise-roughened edge via feTurbulence).
+// Full-screen "pint" backdrop: real footage of a settling pint on the bar —
+// full glass in frame, foam head and all — looped behind legibility scrims.
 // The gradient on .pint-bg doubles as the fallback when the video can't
 // autoplay (e.g. iOS Low Power Mode) or hasn't loaded yet.
 export default function PintBackground() {
@@ -36,12 +35,6 @@ export default function PintBackground() {
 
   return (
     <div className="pint-bg" aria-hidden="true">
-      <svg width="0" height="0" style={{ position: "absolute" }} aria-hidden="true">
-        <filter id="foam-rough" x="-20%" y="-20%" width="140%" height="140%">
-          <feTurbulence type="fractalNoise" baseFrequency="0.011 0.05" numOctaves="3" seed="7" result="n" />
-          <feDisplacementMap in="SourceGraphic" in2="n" scale="26" xChannelSelector="R" yChannelSelector="G" />
-        </filter>
-      </svg>
       <video
         ref={videoRef}
         className="pint-video"
@@ -53,9 +46,6 @@ export default function PintBackground() {
         preload="auto"
       />
       <div className="pint-tone" />
-      <div className="foam-wrap">
-        <div className="foam-core" />
-      </div>
     </div>
   );
 }
