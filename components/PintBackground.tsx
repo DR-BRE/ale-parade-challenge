@@ -38,7 +38,7 @@ export default function PintBackground() {
       <video
         ref={videoRef}
         className="pint-video"
-        src="/pint-settle.mp4?v=3"
+        src="/pint-settle.mp4?v=4"
         autoPlay
         muted
         loop
