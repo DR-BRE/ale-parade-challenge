@@ -2,29 +2,38 @@
 
 import React from "react";
 
-// Full-screen "pint" backdrop: settling pour — cream foam head with a
-// noise-roughened edge, tan settle zone, and a cascade of micro-bubbles
-// streaming downward through the dark body.
-// Bubble params come from a deterministic hash so SSR and client agree.
+// Full-screen "pint" backdrop: real settling-pour footage looped behind a
+// toning scrim that pulls it into the app's stout palette, topped with the
+// foam head (noise-roughened edge via feTurbulence).
+// The gradient on .pint-bg doubles as the fallback when the video can't
+// autoplay (e.g. iOS Low Power Mode) or hasn't loaded yet.
 export default function PintBackground() {
-  const bubbles = React.useMemo(
-    () =>
-      Array.from({ length: 22 }, (_, i) => {
-        const rnd = (n: number) => {
-          const x = Math.sin(i * 127.1 + n * 311.7) * 43758.5453;
-          return x - Math.floor(x);
-        };
-        return {
-          left: (rnd(1) * 100).toFixed(1) + "%",
-          size: (1.4 + rnd(2) * 2.6).toFixed(1) + "px",
-          dur: (5.5 + rnd(3) * 8).toFixed(1) + "s",
-          delay: (-(rnd(4) * 14)).toFixed(1) + "s",
-          o: (0.08 + rnd(5) * 0.2).toFixed(2),
-          drift: (rnd(6) * 18 - 9).toFixed(1) + "px",
-        };
-      }),
-    []
-  );
+  const videoRef = React.useRef<HTMLVideoElement>(null);
+
+  React.useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      v.pause();
+      return;
+    }
+    const tryPlay = () => {
+      v.play().catch(() => {
+        // Autoplay blocked — gradient fallback stays visible until a retry lands.
+      });
+    };
+    tryPlay();
+    // Autoplay can be deferred (hidden tab) or denied (iOS Low Power Mode);
+    // muted playback needs no user-activation, so a retry on visibility or
+    // first touch succeeds where the mount-time attempt was refused.
+    document.addEventListener("visibilitychange", tryPlay);
+    window.addEventListener("pointerdown", tryPlay);
+    return () => {
+      document.removeEventListener("visibilitychange", tryPlay);
+      window.removeEventListener("pointerdown", tryPlay);
+    };
+  }, []);
+
   return (
     <div className="pint-bg" aria-hidden="true">
       <svg width="0" height="0" style={{ position: "absolute" }} aria-hidden="true">
@@ -33,34 +42,17 @@ export default function PintBackground() {
           <feDisplacementMap in="SourceGraphic" in2="n" scale="26" xChannelSelector="R" yChannelSelector="G" />
         </filter>
       </svg>
-      <div className="cascade-fade">
-        <div className="cascade-streaks">
-          <div className="cascade-layer cl-a" />
-          <div className="cascade-layer cl-b" />
-        </div>
-        <div className="cascade-layer cl-c" />
-        <div className="ripple rp-a" />
-        <div className="ripple rp-b" />
-      </div>
-      <div className="bubbles">
-        {bubbles.map((b, i) => (
-          <span
-            key={i}
-            className="bubble"
-            style={
-              {
-                left: b.left,
-                width: b.size,
-                height: b.size,
-                animationDuration: b.dur,
-                animationDelay: b.delay,
-                "--o": b.o,
-                "--drift": b.drift,
-              } as React.CSSProperties
-            }
-          />
-        ))}
-      </div>
+      <video
+        ref={videoRef}
+        className="pint-video"
+        src="/pint-settle.mp4"
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="auto"
+      />
+      <div className="pint-tone" />
       <div className="foam-wrap">
         <div className="foam-core" />
       </div>

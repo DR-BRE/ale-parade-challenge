@@ -46,12 +46,10 @@ body { background: #14100b; }
 /* ---------- Pint backdrop: settling pour ---------- */
 .pint-bg {
   position: fixed; inset: 0; z-index: 0; overflow: hidden;
-  /* Static depth, true to a settling pint: bright amber column under the foam,
-     darker toward the walls, body clearing to black from the bottom.
-     All MOTION is strictly downward (cascade grain + ripple sheen below). */
+  /* Fallback while the video loads or when autoplay is blocked
+     (iOS Low Power Mode): same depth as the footage, frozen. */
   background:
     radial-gradient(85% 40% at 50% 14%, rgba(225, 170, 98, 0.42) 0%, rgba(0,0,0,0) 100%),
-    radial-gradient(140% 70% at 50% 4%, rgba(112, 38, 18, 0.2) 0%, rgba(0,0,0,0) 60%),
     linear-gradient(180deg,
       #b3925f 0px,
       #a07546 110px,
@@ -61,130 +59,29 @@ body { background: #14100b; }
       #0a0503 82%,
       #040302 100%);
 }
-.pint-bg::after {
-  content: ""; position: absolute; inset: 0;
-  background: radial-gradient(120% 90% at 50% 75%, rgba(0,0,0,0) 52%, rgba(0,0,0,0.5) 100%);
-}
 
-/* Ripple sheen: soft horizontal bands sliding straight down, like the
-   dimpled shimmer running along the glass mid-settle. Tile height and
-   translate distance match exactly so the loop is seamless. */
-.ripple {
-  position: absolute; left: -5%; right: -5%; top: -432px; bottom: -432px;
-  filter: blur(10px);
-  will-change: transform;
-}
-.ripple.rp-a {
-  background-image: repeating-linear-gradient(180deg,
-    rgba(228, 188, 134, 0) 0px,
-    rgba(228, 188, 134, 0.05) 22px,
-    rgba(24, 12, 4, 0.05) 48px,
-    rgba(228, 188, 134, 0) 72px,
-    rgba(228, 188, 134, 0.03) 96px,
-    rgba(20, 10, 4, 0.04) 122px,
-    rgba(228, 188, 134, 0) 144px);
-  animation: rippleA 8s linear infinite;
-}
-@keyframes rippleA {
-  from { transform: translate3d(0, 0, 0); }
-  to { transform: translate3d(0, 144px, 0); }
-}
-.ripple.rp-b {
-  background-image: repeating-linear-gradient(180deg,
-    rgba(222, 180, 124, 0) 0px,
-    rgba(20, 10, 4, 0.04) 34px,
-    rgba(222, 180, 124, 0.04) 74px,
-    rgba(26, 13, 5, 0.03) 118px,
-    rgba(222, 180, 124, 0) 216px);
-  animation: rippleB 14s linear infinite;
-}
-@keyframes rippleB {
-  from { transform: translate3d(0, 0, 0); }
-  to { transform: translate3d(0, 216px, 0); }
-}
-
-/* Cascade: micro-bubble streaks streaming downward, in vertical bands like a real glass */
-.cascade-fade {
-  position: absolute; inset: 0; overflow: hidden;
-  -webkit-mask-image: linear-gradient(180deg, rgba(0,0,0,0) 55px, #000 150px, #000 58%, rgba(0,0,0,0.3) 80%, rgba(0,0,0,0.05) 100%);
-  mask-image: linear-gradient(180deg, rgba(0,0,0,0) 55px, #000 150px, #000 58%, rgba(0,0,0,0.3) 80%, rgba(0,0,0,0.05) 100%);
-}
-.cascade-streaks {
+/* Real settling-pour footage. Source is 512x480, so cover-scaling on a phone
+   is roughly native width; the toning scrim hides the upscale softness. */
+.pint-video {
   position: absolute; inset: 0;
-  -webkit-mask-image: repeating-linear-gradient(92deg,
-    rgba(0,0,0,0.95) 0px, rgba(0,0,0,0.4) 11px, rgba(0,0,0,0.85) 19px,
-    rgba(0,0,0,0.15) 32px, rgba(0,0,0,0.7) 44px, rgba(0,0,0,0.3) 61px, rgba(0,0,0,0.95) 73px);
-  mask-image: repeating-linear-gradient(92deg,
-    rgba(0,0,0,0.95) 0px, rgba(0,0,0,0.4) 11px, rgba(0,0,0,0.85) 19px,
-    rgba(0,0,0,0.15) 32px, rgba(0,0,0,0.7) 44px, rgba(0,0,0,0.3) 61px, rgba(0,0,0,0.95) 73px);
-}
-.cascade-layer {
-  position: absolute; left: 0; right: 0;
-  filter: blur(0.4px);
-  will-change: transform;
-}
-.cascade-layer.cl-a {
-  top: -324px; bottom: -324px;
-  background-image:
-    radial-gradient(circle at 5px 9px, rgba(226, 205, 168, 0.2) 1px, rgba(0,0,0,0) 1.7px),
-    radial-gradient(circle at 16px 27px, rgba(226, 205, 168, 0.15) 0.8px, rgba(0,0,0,0) 1.4px),
-    radial-gradient(circle at 11px 19px, rgba(190, 158, 116, 0.13) 1.2px, rgba(0,0,0,0) 2px);
-  background-size: 24px 36px;
-  animation: cascadeA 7s linear infinite;
-}
-@keyframes cascadeA {
-  from { transform: translate3d(0, 0, 0); }
-  to { transform: translate3d(0, 324px, 0); }
-}
-.cascade-layer.cl-b {
-  top: -216px; bottom: -216px;
-  background-image:
-    radial-gradient(circle at 8px 14px, rgba(226, 205, 168, 0.17) 1.3px, rgba(0,0,0,0) 2.1px),
-    radial-gradient(circle at 24px 41px, rgba(206, 180, 140, 0.12) 1px, rgba(0,0,0,0) 1.8px);
-  background-size: 31px 54px;
-  animation: cascadeB 12s linear infinite;
-}
-@keyframes cascadeB {
-  from { transform: translate3d(0, 0, 0); }
-  to { transform: translate3d(0, 216px, 0); }
-}
-/* Coarse dimples: bigger, softer light+dark specks — the orange-peel texture.
-   Large tile with irregular placements so no grid pattern reads. */
-.cascade-layer.cl-c {
-  top: -356px; bottom: -356px;
-  filter: blur(1.4px);
-  background-image:
-    radial-gradient(circle at 13px 21px, rgba(232, 206, 160, 0.13) 2.6px, rgba(0,0,0,0) 4.2px),
-    radial-gradient(circle at 51px 64px, rgba(18, 9, 3, 0.13) 2.2px, rgba(0,0,0,0) 3.8px),
-    radial-gradient(circle at 33px 47px, rgba(225, 192, 142, 0.09) 1.8px, rgba(0,0,0,0) 3.2px),
-    radial-gradient(circle at 62px 12px, rgba(22, 11, 4, 0.1) 1.9px, rgba(0,0,0,0) 3.4px),
-    radial-gradient(circle at 8px 76px, rgba(228, 198, 150, 0.1) 2.2px, rgba(0,0,0,0) 3.7px),
-    radial-gradient(circle at 44px 30px, rgba(20, 10, 4, 0.11) 1.6px, rgba(0,0,0,0) 3px),
-    radial-gradient(circle at 24px 83px, rgba(20, 10, 4, 0.09) 2.4px, rgba(0,0,0,0) 4px);
-  background-size: 67px 89px;
-  animation: cascadeC 9s linear infinite;
-}
-@keyframes cascadeC {
-  from { transform: translate3d(0, 0, 0); }
-  to { transform: translate3d(0, 356px, 0); }
+  width: 100%; height: 100%;
+  object-fit: cover;
+  filter: saturate(0.8) brightness(0.82) contrast(1.06);
 }
 
-.bubbles { position: absolute; inset: 0; }
-.bubble {
-  position: absolute; top: 112px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, rgba(240, 228, 202, 0.9), rgba(206, 172, 126, 0.3));
-  opacity: 0;
-  filter: blur(0.3px);
-  animation-name: bubbleSink;
-  animation-timing-function: linear;
-  animation-iteration-count: infinite;
-}
-@keyframes bubbleSink {
-  0% { transform: translate3d(0, 0, 0); opacity: 0; }
-  7% { opacity: var(--o, 0.2); }
-  88% { opacity: var(--o, 0.2); }
-  100% { transform: translate3d(var(--drift, 0px), 92vh, 0); opacity: 0; }
+/* Toning scrim: pulls the bright orange footage into the stout palette —
+   warm glow up top under the foam, body clearing to black from the bottom
+   so the leaderboard sits on dark, plus an edge vignette. */
+.pint-tone {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(120% 90% at 50% 75%, rgba(0,0,0,0) 45%, rgba(5, 2, 1, 0.55) 100%),
+    linear-gradient(180deg,
+      rgba(80, 40, 12, 0.18) 0px,
+      rgba(20, 10, 4, 0.1) 120px,
+      rgba(10, 5, 2, 0.32) 45%,
+      rgba(5, 2, 1, 0.72) 72%,
+      rgba(3, 2, 1, 0.92) 100%);
 }
 
 /* Foam head: straight layers roughened into an organic edge by feTurbulence displacement */
@@ -538,6 +435,6 @@ body { background: #14100b; }
 @media (prefers-reduced-motion: reduce) {
   .pour, .pour-liquid, .pour-foam, .pour-ring, .pour-label, .count-pop { animation: none !important; }
   .pour { opacity: 0; }
-  .foam-wrap, .foam-core::before, .cascade-layer, .ripple { animation: none !important; }
-  .bubble { display: none; }
+  .foam-wrap, .foam-core::before { animation: none !important; }
+  /* .pint-video is paused via JS in PintBackground when reduced motion is set */
 }
