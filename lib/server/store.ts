@@ -43,6 +43,22 @@ export async function createProfile(args: {
   return profile;
 }
 
+export async function updateProfile(args: {
+  profileId: string;
+  name: string;
+  photoUrl: string | null;
+}): Promise<ProfileRow> {
+  const db = serviceClient();
+  const { data, error } = await db
+    .from("profiles")
+    .update({ name: args.name, photo_url: args.photoUrl })
+    .eq("id", args.profileId)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
 export async function getSecretHash(profileId: string): Promise<string | null> {
   const db = serviceClient();
   const { data, error } = await db
