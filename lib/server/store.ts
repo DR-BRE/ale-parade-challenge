@@ -47,16 +47,16 @@ export async function updateProfile(args: {
   profileId: string;
   name: string;
   photoUrl: string | null;
-}): Promise<ProfileRow> {
+}): Promise<ProfileRow | null> {
   const db = serviceClient();
   const { data, error } = await db
     .from("profiles")
     .update({ name: args.name, photo_url: args.photoUrl })
     .eq("id", args.profileId)
     .select()
-    .single();
+    .maybeSingle();
   if (error) throw error;
-  return data;
+  return data ?? null;
 }
 
 export async function getSecretHash(profileId: string): Promise<string | null> {
