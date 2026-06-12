@@ -1,7 +1,9 @@
 "use client";
 
 import React from "react";
+import Avatar from "@/components/Avatar";
 import Crest from "@/components/Crest";
+import EditProfileModal from "@/components/EditProfileModal";
 import LeaderRow from "@/components/LeaderRow";
 import type { Identity } from "@/lib/identity";
 import { useBoard } from "@/lib/useBoard";
@@ -9,6 +11,7 @@ import { useBoard } from "@/lib/useBoard";
 export default function Leaderboard({ identity }: { identity: Identity }) {
   const board = useBoard(identity);
   const [openId, setOpenId] = React.useState<string | null>(null);
+  const [editing, setEditing] = React.useState(false);
 
   React.useEffect(() => {
     if (!board.error) return;
@@ -20,6 +23,7 @@ export default function Leaderboard({ identity }: { identity: Identity }) {
     return <Crest small />;
   }
 
+  const me = board.members.find((m) => m.id === identity.profileId) ?? null;
   const ranked = board.members
     .map((m, i) => ({ m, i, count: board.countsById[m.id] || 0 }))
     .sort((a, b) => b.count - a.count || a.i - b.i);
@@ -27,6 +31,16 @@ export default function Leaderboard({ identity }: { identity: Identity }) {
 
   return (
     <div>
+      {me && (
+        <button
+          type="button"
+          className="profile-corner"
+          onClick={() => setEditing(true)}
+          aria-label="Edit your profile"
+        >
+          <Avatar src={me.photo} name={me.name} size={40} />
+        </button>
+      )}
       <Crest small />
       {!anySplits && (
         <div className="empty-banner">
@@ -54,6 +68,9 @@ export default function Leaderboard({ identity }: { identity: Identity }) {
       </div>
       <div className="footer-note">First sip decides</div>
       {board.error && <div className="toast" role="status">{board.error}</div>}
+      {editing && me && (
+        <EditProfileModal member={me} identity={identity} onClose={() => setEditing(false)} />
+      )}
     </div>
   );
 }
