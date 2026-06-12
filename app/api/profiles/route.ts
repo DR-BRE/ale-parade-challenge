@@ -48,6 +48,7 @@ export async function POST(req: Request): Promise<Response> {
   return Response.json({ profile, secret }, { status: 201 });
 }
 
+// Full replace: the client sends the complete desired state; an omitted photo clears it.
 export async function PATCH(req: Request): Promise<Response> {
   const profileId = req.headers.get("x-profile-id");
   const secret = req.headers.get("x-profile-secret");

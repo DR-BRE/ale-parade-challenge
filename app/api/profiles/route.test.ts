@@ -165,4 +165,31 @@ describe("PATCH /api/profiles", () => {
       photoUrl: null,
     });
   });
+
+  it("clears the photo when the field is omitted", async () => {
+    const res = await PATCH(patchRequest({ name: "Brett" }));
+    expect(res.status).toBe(200);
+    expect(mockUpdate).toHaveBeenCalledWith({
+      profileId: "p1",
+      name: "Brett",
+      photoUrl: null,
+    });
+  });
+
+  it("accepts boundary values: 24-char name and max-size photo", async () => {
+    const maxPhoto = "data:image/jpeg;base64," + "a".repeat(100_000 - "data:image/jpeg;base64,".length);
+    const res = await PATCH(patchRequest({ name: "x".repeat(24), photo: maxPhoto }));
+    expect(res.status).toBe(200);
+    expect(mockUpdate).toHaveBeenCalledWith({
+      profileId: "p1",
+      name: "x".repeat(24),
+      photoUrl: maxPhoto,
+    });
+  });
+
+  it("rejects when only one credential header is present", async () => {
+    const res = await PATCH(patchRequest({ name: "Brett" }, { "x-profile-secret": "" }));
+    expect(res.status).toBe(401);
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
 });
