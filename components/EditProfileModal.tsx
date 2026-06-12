@@ -29,11 +29,11 @@ export default function EditProfileModal({
 
   React.useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape" && !busy) onClose();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  }, [onClose, busy]);
 
   const pick: React.ChangeEventHandler<HTMLInputElement> = async (e) => {
     const f = e.target.files?.[0];
@@ -74,13 +74,17 @@ export default function EditProfileModal({
   };
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
+    <div
+      className="modal-backdrop"
+      onClick={(e) => {
+        if (e.target === e.currentTarget && !busy) onClose();
+      }}
+    >
       <div
         className="modal-card"
         role="dialog"
         aria-modal="true"
         aria-label="Edit profile"
-        onClick={(e) => e.stopPropagation()}
       >
         <button
           type="button"
@@ -99,6 +103,7 @@ export default function EditProfileModal({
           placeholder="Your name"
           value={name}
           maxLength={24}
+          autoFocus
           onChange={(e) => setName(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") save(); }}
         />
