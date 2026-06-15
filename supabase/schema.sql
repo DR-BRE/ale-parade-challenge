@@ -10,8 +10,12 @@ create table public.profiles (
 -- Secrets live apart from profiles so public reads can never leak them.
 create table public.profile_secrets (
   profile_id uuid primary key references public.profiles(id) on delete cascade,
-  secret_hash text not null
+  secret_hash text not null,
+  recovery_code text unique
 );
+
+-- Migration for already-deployed databases:
+-- alter table public.profile_secrets add column recovery_code text unique;
 
 create table public.splits (
   id uuid primary key default gen_random_uuid(),
