@@ -26,10 +26,8 @@ describe("POST /api/profiles", () => {
   beforeEach(() => {
     mockCreate.mockReset();
     mockCreate.mockResolvedValue({
-      id: "p1",
-      name: "Brett",
-      photo_url: null,
-      created_at: "2026-06-09T00:00:00Z",
+      profile: { id: "p1", name: "Brett", photo_url: null, created_at: "2026-06-09T00:00:00Z" },
+      recoveryCode: "PINT-7K2QF",
     });
   });
 
@@ -51,12 +49,14 @@ describe("POST /api/profiles", () => {
     expect((await POST(request({ name: "Brett", photo: png }))).status).toBe(400);
   });
 
-  it("creates a profile and returns a secret whose hash was stored", async () => {
+  it("creates a profile, returns secret + recovery code, and sets the session cookie", async () => {
     const res = await POST(request({ name: "  Brett ", photo: null }));
     expect(res.status).toBe(201);
     const json = await res.json();
     expect(json.profile.id).toBe("p1");
     expect(json.secret).toMatch(/^[0-9a-f]{64}$/);
+    expect(json.recoveryCode).toBe("PINT-7K2QF");
+    expect(res.headers.get("set-cookie")).toContain("aleParade.session=");
     expect(mockCreate).toHaveBeenCalledWith({
       name: "Brett",
       photoUrl: null,

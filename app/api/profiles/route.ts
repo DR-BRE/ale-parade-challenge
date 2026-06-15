@@ -1,5 +1,6 @@
 import { generateSecret, hashSecret, safeEqualHex } from "@/lib/server/secrets";
 import { createProfile, getSecretHash, updateProfile } from "@/lib/server/store";
+import { serializeSessionCookie } from "@/lib/server/session";
 
 const MAX_PHOTO_CHARS = 100_000; // ~75 KB binary; prototype photos are ~15 KB
 
@@ -40,12 +41,18 @@ export async function POST(req: Request): Promise<Response> {
   }
 
   const secret = generateSecret();
-  const profile = await createProfile({
+  const { profile, recoveryCode } = await createProfile({
     name,
     photoUrl: photo.photo,
     secretHash: hashSecret(secret),
   });
-  return Response.json({ profile, secret }, { status: 201 });
+  return Response.json(
+    { profile, secret, recoveryCode },
+    {
+      status: 201,
+      headers: { "Set-Cookie": serializeSessionCookie({ profileId: profile.id, secret }) },
+    }
+  );
 }
 
 // Full replace: the client sends the complete desired state; an omitted photo clears it.
