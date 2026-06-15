@@ -11,6 +11,8 @@ export default function SetupScreen({ onDone }: { onDone: (identity: Identity) =
   const [photo, setPhoto] = React.useState<string | null>(null);
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [recovering, setRecovering] = React.useState(false);
+  const [code, setCode] = React.useState("");
   const fileRef = React.useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {
@@ -55,6 +57,28 @@ export default function SetupScreen({ onDone }: { onDone: (identity: Identity) =
     }
   };
 
+  const recover = async () => {
+    if (!code.trim() || busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/recover", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: code.trim() }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error || "Could not find that account");
+      }
+      const { profile, secret } = await res.json();
+      onDone({ profileId: profile.id, secret });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not find that account");
+      setBusy(false);
+    }
+  };
+
   return (
     <div className="setup">
       <Crest />
@@ -82,6 +106,30 @@ export default function SetupScreen({ onDone }: { onDone: (identity: Identity) =
       <button type="button" className="pour-in-btn" disabled={!name.trim() || busy} onClick={submit}>
         {busy ? "Pouring…" : "Pour me in"}
       </button>
+
+      {!recovering ? (
+        <button type="button" className="link-btn" onClick={() => { setRecovering(true); setError(null); }}>
+          I already have an account
+        </button>
+      ) : (
+        <div className="recover">
+          <input
+            className="name-input"
+            type="text"
+            placeholder="Recovery code (PINT-XXXXX)"
+            value={code}
+            autoCapitalize="characters"
+            onChange={(e) => setCode(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") recover(); }}
+          />
+          <button type="button" className="pour-in-btn" disabled={!code.trim() || busy} onClick={recover}>
+            {busy ? "Finding…" : "Get me back in"}
+          </button>
+          <button type="button" className="link-btn" onClick={() => { setRecovering(false); setError(null); }}>
+            Back to sign up
+          </button>
+        </div>
+      )}
       {error && <div className="toast" role="status">{error}</div>}
     </div>
   );

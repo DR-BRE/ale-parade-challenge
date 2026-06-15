@@ -19,7 +19,22 @@ export default function EditProfileModal({
   const [photo, setPhoto] = React.useState<string | null>(member.photo);
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [recoveryCode, setRecoveryCode] = React.useState<string | null>(null);
+  const [copied, setCopied] = React.useState(false);
   const fileRef = React.useRef<HTMLInputElement>(null);
+
+  React.useEffect(() => {
+    let active = true;
+    fetch("/api/session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(identity),
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (active && d?.recoveryCode) setRecoveryCode(d.recoveryCode); })
+      .catch(() => {});
+    return () => { active = false; };
+  }, [identity]);
 
   React.useEffect(() => {
     if (!error) return;
@@ -115,6 +130,27 @@ export default function EditProfileModal({
             {busy ? "Saving…" : "Save"}
           </button>
         </div>
+        {recoveryCode && (
+          <div className="recovery-block">
+            <span className="recovery-label">Your recovery code</span>
+            <button
+              type="button"
+              className="recovery-code"
+              onClick={() => {
+                navigator.clipboard?.writeText(recoveryCode).then(
+                  () => { setCopied(true); setTimeout(() => setCopied(false), 1500); },
+                  () => {}
+                );
+              }}
+            >
+              {recoveryCode}
+              <span className="recovery-copy">{copied ? "Copied!" : "Tap to copy"}</span>
+            </button>
+            <span className="recovery-hint">
+              Save this — it&apos;s how you get back in if you clear your browser or switch devices.
+            </span>
+          </div>
+        )}
       </div>
       {error && <div className="toast" role="status">{error}</div>}
     </div>
