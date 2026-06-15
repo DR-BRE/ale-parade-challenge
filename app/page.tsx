@@ -34,7 +34,7 @@ export default function Home() {
       <PintBackground />
       <div className="app">
         {!ready ? null : identity ? (
-          <Leaderboard identity={identity} />
+          <Leaderboard identity={identity} onRelink={finishSetup} />
         ) : (
           <SetupScreen onDone={finishSetup} />
         )}

@@ -18,6 +18,8 @@ export type Board = {
   popKey: number; // bumps on your own +1/-1 to trigger the count pop
   error: string | null;
   clearError: () => void;
+  needsRelink: boolean; // this device's secret no longer authenticates (HTTP 401)
+  clearRelink: () => void;
 };
 
 export function useBoard(identity: Identity): Board {
@@ -25,6 +27,7 @@ export function useBoard(identity: Identity): Board {
   const [splits, setSplits] = React.useState<SplitRow[]>([]);
   const [popKey, setPopKey] = React.useState(0);
   const [error, setError] = React.useState<string | null>(null);
+  const [needsRelink, setNeedsRelink] = React.useState(false);
 
   const refetch = React.useCallback(async () => {
     const [p, s] = await Promise.all([
@@ -75,6 +78,13 @@ export function useBoard(identity: Identity): Board {
           body: JSON.stringify({ delta }),
         });
         if (!res.ok) {
+          // 401 = this device's saved secret no longer matches the server.
+          // Surface the re-link flow instead of a dead-end error toast.
+          if (res.status === 401) {
+            setSplits((s) => s.filter((row) => row.id !== temp.id));
+            setNeedsRelink(true);
+            return;
+          }
           const data = await res.json().catch(() => null);
           throw new Error(data?.error || "That one didn't land — try again");
         }
@@ -129,5 +139,7 @@ export function useBoard(identity: Identity): Board {
     popKey,
     error,
     clearError: () => setError(null),
+    needsRelink,
+    clearRelink: () => setNeedsRelink(false),
   };
 }
