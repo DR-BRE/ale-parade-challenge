@@ -1,21 +1,20 @@
+-- Migration for the already-deployed database (run once, in order):
+-- delete from public.splits;
+-- delete from public.profiles;
+-- drop table if exists public.profile_secrets;
+-- alter table public.profiles alter column id drop default;
+-- alter table public.profiles
+--   add constraint profiles_id_fkey foreign key (id) references auth.users(id) on delete cascade;
+
 -- Ale Parade Challenge schema. Run in the Supabase SQL editor.
 
+-- Identity is Supabase Auth (Google). A profile's id IS the auth user id.
 create table public.profiles (
-  id uuid primary key default gen_random_uuid(),
+  id uuid primary key references auth.users(id) on delete cascade,
   name text not null check (char_length(name) between 1 and 24),
   photo_url text,
   created_at timestamptz not null default now()
 );
-
--- Secrets live apart from profiles so public reads can never leak them.
-create table public.profile_secrets (
-  profile_id uuid primary key references public.profiles(id) on delete cascade,
-  secret_hash text not null,
-  recovery_code text unique
-);
-
--- Migration for already-deployed databases:
--- alter table public.profile_secrets add column recovery_code text unique;
 
 create table public.splits (
   id uuid primary key default gen_random_uuid(),
@@ -25,11 +24,9 @@ create table public.splits (
 );
 
 alter table public.profiles enable row level security;
-alter table public.profile_secrets enable row level security;
 alter table public.splits enable row level security;
 
--- Anyone with the anon key may read the board; nobody may write.
--- (profile_secrets gets no policy at all: invisible to clients.)
+-- Anyone with the anon key may read the board; writes go through service-role API routes.
 create policy "public read profiles" on public.profiles for select using (true);
 create policy "public read splits" on public.splits for select using (true);
 
