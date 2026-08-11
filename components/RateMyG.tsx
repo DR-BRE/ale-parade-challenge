@@ -3,6 +3,7 @@
 import React from "react";
 import type { Identity } from "@/lib/identity";
 import { readScanPhoto } from "@/lib/photo";
+import { supabase } from "@/lib/supabaseClient";
 
 type Judgement = { isGlass: boolean; score: number; verdict: string };
 
@@ -43,12 +44,17 @@ export default function RateMyG({ identity }: { identity: Identity }) {
     try {
       const image = await readScanPhoto(f);
       setPhoto(image);
+      const { data: sess } = await supabase.auth.getSession();
+      const token = sess.session?.access_token;
+      if (!token) {
+        await supabase.auth.signOut();
+        return;
+      }
       const res = await fetch("/api/rate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-profile-id": identity.profileId,
-          "x-profile-secret": identity.secret,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ image }),
       });

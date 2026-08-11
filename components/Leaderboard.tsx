@@ -6,17 +6,10 @@ import Crest from "@/components/Crest";
 import EditProfileModal from "@/components/EditProfileModal";
 import LeaderRow from "@/components/LeaderRow";
 import RateMyG from "@/components/RateMyG";
-import RelinkModal from "@/components/RelinkModal";
 import type { Identity } from "@/lib/identity";
 import { useBoard } from "@/lib/useBoard";
 
-export default function Leaderboard({
-  identity,
-  onRelink,
-}: {
-  identity: Identity;
-  onRelink: (id: Identity) => void;
-}) {
+export default function Leaderboard({ identity }: { identity: Identity }) {
   const board = useBoard(identity);
   const [openId, setOpenId] = React.useState<string | null>(null);
   const [editing, setEditing] = React.useState(false);
@@ -79,12 +72,6 @@ export default function Leaderboard({
       {board.error && <div className="toast" role="status">{board.error}</div>}
       {editing && me && (
         <EditProfileModal member={me} identity={identity} onClose={() => setEditing(false)} />
-      )}
-      {board.needsRelink && (
-        <RelinkModal
-          onRelinked={(id) => { onRelink(id); board.clearRelink(); }}
-          onClose={board.clearRelink}
-        />
       )}
     </div>
   );

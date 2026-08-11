@@ -1,9 +1,13 @@
-import type { Identity } from "@/lib/identity";
+// Legacy device-secret cookie payload. Distinct from the client-facing
+// `Identity` in `lib/identity.ts` (now just `{ profileId }` for the Supabase
+// session) — this whole module goes away in Task 8 with the rest of the
+// device-secret auth path.
+type LegacySessionIdentity = { profileId: string; secret: string };
 
 const COOKIE_NAME = "aleParade.session";
 const MAX_AGE = 60 * 60 * 24 * 365; // 1 year
 
-export function serializeSessionCookie(identity: Identity): string {
+export function serializeSessionCookie(identity: LegacySessionIdentity): string {
   const value = encodeURIComponent(JSON.stringify(identity));
   return `${COOKIE_NAME}=${value}; Max-Age=${MAX_AGE}; Path=/; HttpOnly; Secure; SameSite=Lax`;
 }
@@ -12,7 +16,7 @@ export function clearSessionCookie(): string {
   return `${COOKIE_NAME}=; Max-Age=0; Path=/; HttpOnly; Secure; SameSite=Lax`;
 }
 
-export function readSessionCookie(req: Request): Identity | null {
+export function readSessionCookie(req: Request): LegacySessionIdentity | null {
   const header = req.headers.get("cookie");
   if (!header) return null;
   const part = header.split(/; */).find((c) => c.startsWith(`${COOKIE_NAME}=`));
