@@ -8,6 +8,7 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.111.0",
     "@supabase/supabase-js": "^2.49.0",
     "class-variance-authority": "^0.7.1",
     "next": "^15.3.0",

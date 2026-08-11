@@ -8,3 +8,9 @@ coverage/
 .vercel/
 out/
 .vercel
+.superpowers/
+
+# Local Claude settings and large source videos (not shipped assets)
+.claude/
+bg_ale.mp4
+bg_ale_stable.mp4

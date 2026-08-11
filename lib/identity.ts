@@ -24,21 +24,45 @@ export function saveIdentity(identity: Identity): void {
   }
 }
 
-// Resolve identity on app load, healing a wiped localStorage from the durable
-// server cookie when possible:
-//   1. localStorage present  -> use it; refresh the cookie in the background.
+export function clearIdentity(): void {
+  try {
+    localStorage.removeItem(KEY);
+  } catch {
+    // Nothing to clean up if storage is unavailable.
+  }
+}
+
+// Resolve identity on app load, validating it server-side so a stale or deleted
+// profile heals to the setup screen instead of stranding the user on a board
+// where no row is theirs:
+//   1. localStorage present  -> validate via POST /api/session (also refreshes
+//                               the cookie). 401 means the server no longer
+//                               recognizes it: drop it and fall through. Any
+//                               other outcome (incl. offline) keeps the user in.
 //   2. localStorage empty     -> ask the server (GET /api/session); if the cookie
 //                                survived Safari's purge, re-seed localStorage.
 //   3. neither                -> null (caller shows the setup screen).
 export async function resolveIdentity(): Promise<Identity | null> {
   const local = loadIdentity();
   if (local) {
-    void fetch("/api/session", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(local),
-    }).catch(() => {});
-    return local;
+    try {
+      const res = await fetch("/api/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(local),
+      });
+      // 401 = profile deleted or secret rotated. Drop the dead identity and let
+      // the cookie/setup path below take over.
+      if (res.status === 401) {
+        clearIdentity();
+      } else {
+        return local;
+      }
+    } catch {
+      // Offline or server hiccup: we can't prove it's invalid, so don't strand
+      // the user — trust what's on the device.
+      return local;
+    }
   }
   try {
     const res = await fetch("/api/session");

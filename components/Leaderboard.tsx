@@ -5,6 +5,7 @@ import Avatar from "@/components/Avatar";
 import Crest from "@/components/Crest";
 import EditProfileModal from "@/components/EditProfileModal";
 import LeaderRow from "@/components/LeaderRow";
+import RateMyG from "@/components/RateMyG";
 import RelinkModal from "@/components/RelinkModal";
 import type { Identity } from "@/lib/identity";
 import { useBoard } from "@/lib/useBoard";
@@ -73,6 +74,7 @@ export default function Leaderboard({
           />
         ))}
       </div>
+      <RateMyG identity={identity} />
       <div className="footer-note">First sip decides</div>
       {board.error && <div className="toast" role="status">{board.error}</div>}
       {editing && me && (
