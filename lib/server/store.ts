@@ -51,6 +51,30 @@ export async function createProfile(args: {
   throw new Error("Could not generate a unique recovery code");
 }
 
+// Create-if-absent by auth user id; never overwrites an edited name/photo.
+export async function ensureProfile(args: {
+  id: string;
+  name: string;
+  photoUrl: string | null;
+}): Promise<ProfileRow> {
+  const db = serviceClient();
+  const { data: existing, error: selErr } = await db
+    .from("profiles")
+    .select("id, name, photo_url, created_at")
+    .eq("id", args.id)
+    .maybeSingle();
+  if (selErr) throw selErr;
+  if (existing) return existing;
+
+  const { data, error } = await db
+    .from("profiles")
+    .insert({ id: args.id, name: args.name, photo_url: args.photoUrl })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
 export async function updateProfile(args: {
   profileId: string;
   name: string;

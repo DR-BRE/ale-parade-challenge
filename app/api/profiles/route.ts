@@ -1,6 +1,5 @@
-import { generateSecret, hashSecret, safeEqualHex } from "@/lib/server/secrets";
-import { createProfile, getSecretHash, updateProfile } from "@/lib/server/store";
-import { serializeSessionCookie } from "@/lib/server/session";
+import { getAuthedUser } from "@/lib/server/auth";
+import { ensureProfile, updateProfile } from "@/lib/server/store";
 
 const MAX_PHOTO_CHARS = 100_000; // ~75 KB binary; prototype photos are ~15 KB
 
@@ -16,52 +15,19 @@ function parsePhoto(value: unknown): { ok: true; photo: string | null } | { ok: 
   return isSmallJpeg ? { ok: true, photo: value } : { ok: false };
 }
 
+// First Google sign-in: create the profile from Google's name/avatar. Idempotent.
 export async function POST(req: Request): Promise<Response> {
-  let body: { name?: unknown; photo?: unknown };
-  try {
-    body = await req.json();
-  } catch {
-    return Response.json({ error: "Invalid JSON" }, { status: 400 });
-  }
-
-  const name = parseName(body.name);
-  if (!name) {
-    return Response.json(
-      { error: "Name must be 1-24 characters" },
-      { status: 400 }
-    );
-  }
-
-  const photo = parsePhoto(body.photo);
-  if (!photo.ok) {
-    return Response.json(
-      { error: "Photo must be a small JPEG data URL" },
-      { status: 400 }
-    );
-  }
-
-  const secret = generateSecret();
-  const { profile, recoveryCode } = await createProfile({
-    name,
-    photoUrl: photo.photo,
-    secretHash: hashSecret(secret),
-  });
-  return Response.json(
-    { profile, secret, recoveryCode },
-    {
-      status: 201,
-      headers: { "Set-Cookie": serializeSessionCookie({ profileId: profile.id, secret }) },
-    }
-  );
+  const user = await getAuthedUser(req);
+  if (!user) return Response.json({ error: "Not signed in" }, { status: 401 });
+  const name = (user.fullName?.trim() || "Anonymous").slice(0, 24);
+  const profile = await ensureProfile({ id: user.id, name, photoUrl: user.avatarUrl });
+  return Response.json({ profile }, { status: 200 });
 }
 
 // Full replace: the client sends the complete desired state; an omitted photo clears it.
 export async function PATCH(req: Request): Promise<Response> {
-  const profileId = req.headers.get("x-profile-id");
-  const secret = req.headers.get("x-profile-secret");
-  if (!profileId || !secret) {
-    return Response.json({ error: "Missing credentials" }, { status: 401 });
-  }
+  const user = await getAuthedUser(req);
+  if (!user) return Response.json({ error: "Not signed in" }, { status: 401 });
 
   let body: { name?: unknown; photo?: unknown };
   try {
@@ -72,26 +38,14 @@ export async function PATCH(req: Request): Promise<Response> {
 
   const name = parseName(body.name);
   if (!name) {
-    return Response.json(
-      { error: "Name must be 1-24 characters" },
-      { status: 400 }
-    );
+    return Response.json({ error: "Name must be 1-24 characters" }, { status: 400 });
   }
-
   const photo = parsePhoto(body.photo);
   if (!photo.ok) {
-    return Response.json(
-      { error: "Photo must be a small JPEG data URL" },
-      { status: 400 }
-    );
+    return Response.json({ error: "Photo must be a small JPEG data URL" }, { status: 400 });
   }
 
-  const storedHash = await getSecretHash(profileId);
-  if (!storedHash || !safeEqualHex(storedHash, hashSecret(secret))) {
-    return Response.json({ error: "Not your pint" }, { status: 401 });
-  }
-
-  const profile = await updateProfile({ profileId, name, photoUrl: photo.photo });
+  const profile = await updateProfile({ profileId: user.id, name, photoUrl: photo.photo });
   if (!profile) {
     return Response.json({ error: "Profile not found" }, { status: 404 });
   }
