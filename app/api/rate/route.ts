@@ -1,7 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { getAuthedUser } from "@/lib/server/auth";
 import { allow } from "@/lib/server/rateLimit";
-import { hashSecret, safeEqualHex } from "@/lib/server/secrets";
-import { getSecretHash } from "@/lib/server/store";
 
 const JPEG_PREFIX = "data:image/jpeg;base64,";
 // ~4 MB of base64 — a readScanPhoto image is a few hundred KB, so anything
@@ -51,11 +50,9 @@ const JUDGEMENT_SCHEMA = {
 const JUDGE_DOWN = { error: "The judge is off duty — try again in a minute" };
 
 export async function POST(req: Request): Promise<Response> {
-  const profileId = req.headers.get("x-profile-id");
-  const secret = req.headers.get("x-profile-secret");
-  if (!profileId || !secret) {
-    return Response.json({ error: "Missing credentials" }, { status: 401 });
-  }
+  const user = await getAuthedUser(req);
+  if (!user) return Response.json({ error: "Not signed in" }, { status: 401 });
+  const profileId = user.id;
 
   let body: { image?: unknown };
   try {
@@ -69,11 +66,6 @@ export async function POST(req: Request): Promise<Response> {
   }
   if (image.length > MAX_IMAGE_CHARS) {
     return Response.json({ error: "Photo too large" }, { status: 413 });
-  }
-
-  const storedHash = await getSecretHash(profileId);
-  if (!storedHash || !safeEqualHex(storedHash, hashSecret(secret))) {
-    return Response.json({ error: "Not your pint" }, { status: 401 });
   }
 
   if (!allow(`rate:${profileId}`, SCANS_PER_MINUTE, 60_000)) {

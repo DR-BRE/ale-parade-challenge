@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { hashSecret } from "@/lib/server/secrets";
 
 const { mockCreate } = vi.hoisted(() => ({ mockCreate: vi.fn() }));
 
@@ -9,22 +8,19 @@ vi.mock("@anthropic-ai/sdk", () => ({
   },
 }));
 
-vi.mock("@/lib/server/store", () => ({
-  getSecretHash: vi.fn(),
-}));
+vi.mock("@/lib/server/auth", () => ({ getAuthedUser: vi.fn() }));
 
 vi.mock("@/lib/server/rateLimit", () => ({
   allow: vi.fn(),
 }));
 
+import { getAuthedUser } from "@/lib/server/auth";
 import { allow } from "@/lib/server/rateLimit";
-import { getSecretHash } from "@/lib/server/store";
 import { POST } from "./route";
 
-const mockHash = vi.mocked(getSecretHash);
+const mockAuth = vi.mocked(getAuthedUser);
 const mockAllow = vi.mocked(allow);
 
-const SECRET = "a".repeat(64);
 const IMAGE = "data:image/jpeg;base64," + "abcd".repeat(50);
 
 function judgement(fields: Record<string, unknown>) {
@@ -34,14 +30,12 @@ function judgement(fields: Record<string, unknown>) {
   };
 }
 
-function request(body: unknown, headers: Record<string, string> = {}): Request {
+function request(body: unknown, auth = true): Request {
   return new Request("http://test/api/rate", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "x-profile-id": "p1",
-      "x-profile-secret": SECRET,
-      ...headers,
+      ...(auth ? { Authorization: "Bearer good" } : {}),
     },
     body: JSON.stringify(body),
   });
@@ -49,7 +43,7 @@ function request(body: unknown, headers: Record<string, string> = {}): Request {
 
 describe("POST /api/rate", () => {
   beforeEach(() => {
-    mockHash.mockReset().mockResolvedValue(hashSecret(SECRET));
+    mockAuth.mockReset().mockResolvedValue({ id: "p1", fullName: "P", avatarUrl: null });
     mockAllow.mockReset().mockReturnValue(true);
     mockCreate
       .mockReset()
@@ -58,19 +52,9 @@ describe("POST /api/rate", () => {
       );
   });
 
-  it("rejects missing credentials", async () => {
-    const bare = new Request("http://test/api/rate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ image: IMAGE }),
-    });
-    expect((await POST(bare)).status).toBe(401);
-    expect(mockCreate).not.toHaveBeenCalled();
-  });
-
-  it("rejects a wrong secret", async () => {
-    const res = await POST(request({ image: IMAGE }, { "x-profile-secret": "b".repeat(64) }));
-    expect(res.status).toBe(401);
+  it("rejects an unauthenticated request", async () => {
+    mockAuth.mockResolvedValue(null);
+    expect((await POST(request({ image: IMAGE }, false))).status).toBe(401);
     expect(mockCreate).not.toHaveBeenCalled();
   });
 
@@ -79,8 +63,7 @@ describe("POST /api/rate", () => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-profile-id": "p1",
-        "x-profile-secret": SECRET,
+        Authorization: "Bearer good",
       },
       body: "{not json",
     });
