@@ -1,29 +1,25 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { hashSecret } from "@/lib/server/secrets";
 
+vi.mock("@/lib/server/auth", () => ({ getAuthedUser: vi.fn() }));
 vi.mock("@/lib/server/store", () => ({
-  getSecretHash: vi.fn(),
   getCount: vi.fn(),
   insertSplit: vi.fn(),
 }));
 
-import { getCount, getSecretHash, insertSplit } from "@/lib/server/store";
+import { getAuthedUser } from "@/lib/server/auth";
+import { getCount, insertSplit } from "@/lib/server/store";
 import { POST } from "./route";
 
-const mockHash = vi.mocked(getSecretHash);
+const mockAuth = vi.mocked(getAuthedUser);
 const mockCount = vi.mocked(getCount);
 const mockInsert = vi.mocked(insertSplit);
 
-const SECRET = "a".repeat(64);
-
-function request(delta: unknown, headers: Record<string, string> = {}): Request {
+function request(delta: unknown, auth = true): Request {
   return new Request("http://test/api/splits", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "x-profile-id": "p1",
-      "x-profile-secret": SECRET,
-      ...headers,
+      ...(auth ? { Authorization: "Bearer good" } : {}),
     },
     body: JSON.stringify({ delta }),
   });
@@ -31,35 +27,17 @@ function request(delta: unknown, headers: Record<string, string> = {}): Request 
 
 describe("POST /api/splits", () => {
   beforeEach(() => {
-    mockHash.mockReset().mockResolvedValue(hashSecret(SECRET));
+    mockAuth.mockReset().mockResolvedValue({ id: "p1", fullName: "P", avatarUrl: null });
     mockCount.mockReset().mockResolvedValue(3);
     mockInsert.mockReset().mockResolvedValue({
-      id: "s1",
-      profile_id: "p1",
-      delta: 1,
-      created_at: "2026-06-09T00:00:00Z",
+      id: "s1", profile_id: "p1", delta: 1, created_at: "2026-08-10T00:00:00Z",
     });
   });
 
-  it("rejects missing credentials", async () => {
-    const bare = new Request("http://test/api/splits", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ delta: 1 }),
-    });
-    expect((await POST(bare)).status).toBe(401);
+  it("rejects an unauthenticated request", async () => {
+    mockAuth.mockResolvedValue(null);
+    expect((await POST(request(1, false))).status).toBe(401);
     expect(mockInsert).not.toHaveBeenCalled();
-  });
-
-  it("rejects a wrong secret", async () => {
-    const res = await POST(request(1, { "x-profile-secret": "b".repeat(64) }));
-    expect(res.status).toBe(401);
-    expect(mockInsert).not.toHaveBeenCalled();
-  });
-
-  it("rejects an unknown profile", async () => {
-    mockHash.mockResolvedValue(null);
-    expect((await POST(request(1))).status).toBe(401);
   });
 
   it("rejects deltas other than +1/-1", async () => {
@@ -71,15 +49,10 @@ describe("POST /api/splits", () => {
   it("rejects malformed JSON", async () => {
     const bad = new Request("http://test/api/splits", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-profile-id": "p1",
-        "x-profile-secret": SECRET,
-      },
+      headers: { "Content-Type": "application/json", Authorization: "Bearer good" },
       body: "{not json",
     });
     expect((await POST(bad)).status).toBe(400);
-    expect(mockInsert).not.toHaveBeenCalled();
   });
 
   it("rejects an undo when the count is zero", async () => {
@@ -88,7 +61,7 @@ describe("POST /api/splits", () => {
     expect(mockInsert).not.toHaveBeenCalled();
   });
 
-  it("inserts a valid split and returns it", async () => {
+  it("inserts a valid split for the authed user", async () => {
     const res = await POST(request(1));
     expect(res.status).toBe(201);
     expect((await res.json()).split.id).toBe("s1");

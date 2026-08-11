@@ -1,12 +1,10 @@
-import { hashSecret, safeEqualHex } from "@/lib/server/secrets";
-import { getCount, getSecretHash, insertSplit } from "@/lib/server/store";
+import { getAuthedUser } from "@/lib/server/auth";
+import { getCount, insertSplit } from "@/lib/server/store";
 
 export async function POST(req: Request): Promise<Response> {
-  const profileId = req.headers.get("x-profile-id");
-  const secret = req.headers.get("x-profile-secret");
-  if (!profileId || !secret) {
-    return Response.json({ error: "Missing credentials" }, { status: 401 });
-  }
+  const user = await getAuthedUser(req);
+  if (!user) return Response.json({ error: "Not signed in" }, { status: 401 });
+  const profileId = user.id;
 
   let body: { delta?: unknown };
   try {
@@ -17,11 +15,6 @@ export async function POST(req: Request): Promise<Response> {
   const delta = body.delta;
   if (delta !== 1 && delta !== -1) {
     return Response.json({ error: "delta must be 1 or -1" }, { status: 400 });
-  }
-
-  const storedHash = await getSecretHash(profileId);
-  if (!storedHash || !safeEqualHex(storedHash, hashSecret(secret))) {
-    return Response.json({ error: "Not your pint" }, { status: 401 });
   }
 
   // Check-then-act: two concurrent -1s can drive the sum to -1. Accepted —
