@@ -18,6 +18,11 @@ const sans = Source_Sans_3({
 export const metadata: Metadata = {
   title: "Ale Parade Challenge",
   description: "Split-the-G tally for the crew. First sip decides.",
+  appleWebApp: {
+    capable: true,
+    title: "Ale Parade",
+    statusBarStyle: "black-translucent",
+  },
 };
 
 export const viewport: Viewport = {
