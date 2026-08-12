@@ -12,7 +12,10 @@ function parsePhoto(value: unknown): { ok: true; photo: string | null } | { ok: 
   if (typeof value !== "string" || value.length === 0) return { ok: true, photo: null };
   const isSmallJpeg =
     value.startsWith("data:image/jpeg;base64,") && value.length <= MAX_PHOTO_CHARS;
-  return isSmallJpeg ? { ok: true, photo: value } : { ok: false };
+  // Google (or other provider) avatar URLs come back as plain https links and
+  // must round-trip through an edit that only changes the name.
+  const isRemoteUrl = value.startsWith("https://") && value.length <= 2048;
+  return isSmallJpeg || isRemoteUrl ? { ok: true, photo: value } : { ok: false };
 }
 
 // First Google sign-in: create the profile from Google's name/avatar. Idempotent.

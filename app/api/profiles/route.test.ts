@@ -76,6 +76,22 @@ describe("PATCH /api/profiles (edit)", () => {
     expect((await PATCH(req("PATCH", { name: "Ada", photo: "data:image/png;base64,x" }))).status).toBe(400);
   });
 
+  it("rejects malformed JSON", async () => {
+    const bad = new Request("http://test/api/profiles", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", Authorization: "Bearer good" },
+      body: "{not json",
+    });
+    expect((await PATCH(bad)).status).toBe(400);
+  });
+
+  it("accepts an https avatar URL unchanged (Google photo round-trips)", async () => {
+    const url = "https://lh3.googleusercontent.com/a/abc123";
+    const res = await PATCH(req("PATCH", { name: "Ada", photo: url }));
+    expect(res.status).toBe(200);
+    expect(mockUpdate).toHaveBeenCalledWith({ profileId: "p1", name: "Ada", photoUrl: url });
+  });
+
   it("updates the authed user's own profile", async () => {
     const res = await PATCH(req("PATCH", { name: "Ada", photo: null }));
     expect(res.status).toBe(200);
