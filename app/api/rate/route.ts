@@ -22,17 +22,22 @@ Look at the photo and judge the attempt:
    a dry one-liner about what you actually see.
 2. Otherwise set is_glass to true and score the attempt from 0 to 100 based on
    where the boundary between the dark stout and the pale foam/empty glass
-   crosses the letter G:
+   crosses the letter G. Be generous — this is a celebratory pub game, and any
+   real attempt at a split deserves a good score:
    - 100: the line passes dead through the horizontal middle of the G.
-   - 90-99: within the G but slightly off center.
-   - 70-89: touching the very top or bottom edge of the G.
-   - 40-69: within one letter-height above or below the G.
-   - 1-39: further away; scale down with distance.
-   - 0: nowhere close, or the glass is untouched/empty.
-   Judge only the vertical position of the line relative to the G. The glass
-   may be photographed at an angle; use the lettering itself as the reference.
+   - 90-99: the line is anywhere within the G, OR touching its top or bottom
+     edge. A clean, close split lives here — treat this as the reward band.
+   - 78-89: the line is within about half a letter-height above or below the G.
+   - 60-77: the line is within about one letter-height of the G.
+   - 35-59: the line is within about two letter-heights of the G.
+   - 10-34: a recognizable attempt but well off.
+   - 0: not a Guinness glass, or the glass is untouched/empty/no attempt made.
+   Judge only the vertical position of the line relative to the G. Photos are
+   usually taken at a slight downward angle, which makes the line look higher
+   than it really is — give the benefit of the doubt and use the lettering
+   itself as your reference. When in doubt between two bands, pick the higher.
 3. The verdict is one short, witty sentence a pub referee would say —
-   celebratory for great scores, gently brutal for bad ones.
+   celebratory for great scores, gently ribbing for low ones.
 
 Answer with is_glass, score, and verdict.`;
 
