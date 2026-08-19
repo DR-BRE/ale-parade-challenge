@@ -76,6 +76,10 @@ export default function RateMyG({ identity }: { identity: Identity }) {
     <>
       <div className="rate-g-wrap">
         <button type="button" className="rate-g-btn" onClick={() => setOpen(true)}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M4 8 h3 l1.5-2 h7 L18 8 h2 a1 1 0 0 1 1 1 v9 a1 1 0 0 1-1 1 H4 a1 1 0 0 1-1-1 V9 a1 1 0 0 1 1-1 Z" />
+            <circle cx="12" cy="13" r="3.4" />
+          </svg>
           Rate my G
         </button>
       </div>

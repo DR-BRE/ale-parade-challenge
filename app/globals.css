@@ -298,11 +298,12 @@ body { background: var(--stout); }
 /* ---------- Rate my G ---------- */
 .rate-g-wrap { display: flex; justify-content: center; }
 .rate-g-btn { width: 100%; min-height: 50px; border-radius: 16px;
-  display: flex; align-items: center; justify-content: center;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
   background: rgba(11,9,6,0.4); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
   color: var(--gold-bright); border: 1px solid var(--gold-deep); cursor: pointer;
   font-family: var(--sans); font-weight: 600; font-size: 12px; letter-spacing: 0.22em; text-transform: uppercase;
   transition: transform .1s, border-color .15s; }
+.rate-g-btn svg { width: 18px; height: 18px; flex: none; }
 .rate-g-btn:active { transform: scale(0.98); }
 .rate-card { text-align: center; }
 .rate-title { font-family: var(--serif); font-weight: 700; font-size: 26px; color: var(--cream-bright); }
