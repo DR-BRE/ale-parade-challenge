@@ -20,7 +20,7 @@ export default function SplitButton({ onPour }: { onPour: () => void }) {
         </span>
       )}
       <span className={pourId > 0 ? "split-label pour-label" : "split-label"} key={"l" + pourId}>
-        <span className="plus">+1</span>Split it!
+        Split the G<span className="plus">+1</span>
       </span>
     </button>
   );
