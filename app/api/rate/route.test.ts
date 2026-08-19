@@ -14,12 +14,16 @@ vi.mock("@/lib/server/rateLimit", () => ({
   allow: vi.fn(),
 }));
 
+vi.mock("@/lib/server/store", () => ({ insertScore: vi.fn() }));
+
 import { getAuthedUser } from "@/lib/server/auth";
+import { insertScore } from "@/lib/server/store";
 import { allow } from "@/lib/server/rateLimit";
 import { POST } from "./route";
 
 const mockAuth = vi.mocked(getAuthedUser);
 const mockAllow = vi.mocked(allow);
+const mockInsertScore = vi.mocked(insertScore);
 
 const IMAGE = "data:image/jpeg;base64," + "abcd".repeat(50);
 
@@ -45,6 +49,7 @@ describe("POST /api/rate", () => {
   beforeEach(() => {
     mockAuth.mockReset().mockResolvedValue({ id: "p1", fullName: "P", avatarUrl: null });
     mockAllow.mockReset().mockReturnValue(true);
+    mockInsertScore.mockReset().mockResolvedValue(undefined);
     mockCreate
       .mockReset()
       .mockResolvedValue(
@@ -97,6 +102,26 @@ describe("POST /api/rate", () => {
     const call = mockCreate.mock.calls[0][0];
     expect(call.model).toBe("claude-opus-4-8");
     expect(call.messages[0].content[0].source.data).not.toContain("data:image");
+  });
+
+  it("records the score toward the average on a real glass", async () => {
+    await POST(request({ image: IMAGE }));
+    expect(mockInsertScore).toHaveBeenCalledWith("p1", 97);
+  });
+
+  it("does not record a score when there is no glass", async () => {
+    mockCreate.mockResolvedValue(
+      judgement({ is_glass: false, score: 0, verdict: "That's a cat." })
+    );
+    await POST(request({ image: IMAGE }));
+    expect(mockInsertScore).not.toHaveBeenCalled();
+  });
+
+  it("still returns the judgement when recording the score fails", async () => {
+    mockInsertScore.mockRejectedValue(new Error("db down"));
+    const res = await POST(request({ image: IMAGE }));
+    expect(res.status).toBe(200);
+    expect((await res.json()).score).toBe(97);
   });
 
   it("clamps out-of-range scores", async () => {

@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { getAuthedUser } from "@/lib/server/auth";
+import { insertScore } from "@/lib/server/store";
 import { allow } from "@/lib/server/rateLimit";
 
 const JPEG_PREFIX = "data:image/jpeg;base64,";
@@ -122,8 +123,21 @@ export async function POST(req: Request): Promise<Response> {
   }
 
   const score = Math.min(100, Math.max(0, Math.round(Number(judgement.score) || 0)));
+  const isGlass = judgement.is_glass === true;
+
+  // Only real G attempts count toward the average; a "no glass" result is 0 and
+  // would drag it down unfairly. Best-effort: a save failure never breaks the
+  // rating the player is waiting on.
+  if (isGlass) {
+    try {
+      await insertScore(profileId, score);
+    } catch {
+      // swallow — the judgement below is what matters to the player
+    }
+  }
+
   return Response.json({
-    isGlass: judgement.is_glass === true,
+    isGlass,
     score,
     verdict: typeof judgement.verdict === "string" ? judgement.verdict : "",
   });

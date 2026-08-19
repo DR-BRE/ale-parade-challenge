@@ -85,3 +85,10 @@ export async function insertSplit(
   if (error) throw error;
   return data;
 }
+
+// Record a Rate-my-G accuracy score (0..100) toward the person's average.
+export async function insertScore(profileId: string, score: number): Promise<void> {
+  const db = serviceClient();
+  const { error } = await db.from("scores").insert({ profile_id: profileId, score });
+  if (error) throw error;
+}

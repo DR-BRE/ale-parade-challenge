@@ -12,7 +12,6 @@ import { useBoard } from "@/lib/useBoard";
 
 export default function Leaderboard({ identity }: { identity: Identity }) {
   const board = useBoard(identity);
-  const [openId, setOpenId] = React.useState<string | null>(null);
   const [editing, setEditing] = React.useState(false);
 
   React.useEffect(() => {
@@ -62,6 +61,7 @@ export default function Leaderboard({ identity }: { identity: Identity }) {
           <Champion
             member={champion.m}
             count={champion.count}
+            avg={board.avgById[champion.m.id]}
             isYou={champion.m.id === identity.profileId}
             popKey={popFor(champion.m.id)}
             onPour={board.pour}
@@ -81,12 +81,10 @@ export default function Leaderboard({ identity }: { identity: Identity }) {
                   rank={champion ? idx + 2 : idx + 1}
                   isYou={r.m.id === identity.profileId}
                   count={r.count}
+                  avg={board.avgById[r.m.id]}
                   popKey={popFor(r.m.id)}
                   onPour={board.pour}
                   onUndo={board.undo}
-                  history={board.historyById[r.m.id] || []}
-                  isOpen={openId === r.m.id}
-                  onToggle={() => setOpenId(openId === r.m.id ? null : r.m.id)}
                 />
               ))}
             </div>

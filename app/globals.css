@@ -105,7 +105,7 @@ body { background: var(--stout); }
 /* Champion plaque (full liquid-glass refraction) */
 .champ { border-radius: 22px; }
 .champ .g-content { padding: 18px 18px 16px;
-  display: grid; grid-template-columns: auto 1fr auto; grid-template-rows: auto auto;
+  display: grid; grid-template-columns: auto 1fr auto auto; grid-template-rows: auto auto;
   column-gap: 15px; align-items: center; }
 .champ-tag { grid-column: 1 / -1; display: flex; align-items: center; gap: 8px;
   font-family: var(--sans); font-size: 9.5px; font-weight: 700; letter-spacing: 0.3em;
@@ -123,7 +123,7 @@ body { background: var(--stout); }
   color: var(--gold-bright); font-variant-numeric: tabular-nums; text-align: right; }
 .champ-count small { display: block; font-family: var(--sans); font-size: 8.5px; font-weight: 600;
   letter-spacing: 0.24em; text-transform: uppercase; color: var(--cream-faint); margin-top: 5px; }
-.champ .you-actions, .champ .breakdown { grid-column: 1 / -1; }
+.champ .you-actions { grid-column: 1 / -1; }
 .champ-you-tag { margin-left: 10px; }
 
 /* Frosted honours board */
@@ -132,7 +132,7 @@ body { background: var(--stout); }
 .board { display: block; }
 
 /* Ledger row */
-.row { display: grid; grid-template-columns: 24px 38px 1fr auto 30px;
+.row { display: grid; grid-template-columns: 24px 38px 1fr auto auto;
   align-items: center; gap: 12px; padding: 14px 0; border-top: 1px solid var(--hair); }
 .board-panel .g-content > .row:first-child { border-top: none; }
 .row .rank { font-family: var(--serif); font-weight: 400; font-style: italic;
@@ -217,19 +217,17 @@ body { background: var(--stout); }
   font-size: 21px; color: var(--cream); }
 .empty-banner .small { margin-top: 6px; font-size: 13px; color: var(--cream-dim); }
 
-/* ---------- Per-person breakdown ---------- */
-.expand-btn { flex: none; width: 30px; height: 30px; border: none; border-radius: 50%;
-  background: transparent; color: var(--cream-faint); cursor: pointer;
-  display: flex; align-items: center; justify-content: center; transition: color .15s; padding: 0; }
-.expand-btn:active { color: var(--cream); }
-.chev { width: 14px; height: 14px; transition: transform .2s ease; }
-.chev.open { transform: rotate(180deg); }
-.breakdown { grid-column: 1 / -1; border-top: 1px solid var(--hair); margin-top: 8px; padding-top: 4px; }
-.bd-item { display: flex; justify-content: space-between; align-items: baseline;
-  gap: 12px; padding: 6px 2px; font-size: 14px; }
-.bd-item.undo .bd-text { font-style: italic; opacity: 0.6; }
-.bd-time { opacity: 0.55; font-size: 12px; flex: none; }
-.bd-empty { padding: 7px 2px 2px; font-size: 12px; font-style: italic; opacity: 0.55; }
+/* ---------- Average G accuracy readout ---------- */
+.g-acc { display: inline-flex; align-items: baseline; gap: 2px; justify-self: end;
+  font-family: var(--serif); color: var(--gold); font-variant-numeric: tabular-nums;
+  white-space: nowrap; }
+.g-acc-val { font-weight: 700; font-size: 18px; line-height: 1; }
+.g-acc-unit { font-family: var(--sans); font-size: 8.5px; font-weight: 700;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--cream-faint); }
+.g-acc.empty { font-size: 18px; color: var(--cream-faint); }
+/* On the champion plaque the readout sits beside the crest with a little more air. */
+.champ .g-acc { flex-direction: column; align-items: flex-end; gap: 3px; }
+.champ .g-acc-val { font-size: 26px; color: var(--gold-bright); }
 
 /* ---------- Setup / sign-in ---------- */
 .uploader { margin: 34px 0 6px; position: relative; cursor: pointer;

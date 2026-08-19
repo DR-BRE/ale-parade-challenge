@@ -1,8 +1,6 @@
 "use client";
 
 import SplitButton from "@/components/SplitButton";
-import { timeText } from "@/lib/timeText";
-import type { Entry } from "@/components/LeaderRow";
 
 // The current user's controls: take one back, or split the G. Shared by the
 // champion plaque and the ledger rows.
@@ -32,20 +30,16 @@ export function YouActions({
   );
 }
 
-// A person's pour history, revealed by the chevron.
-export function Breakdown({ history }: { history: Entry[] }) {
+// A person's average Rate-my-G accuracy, or a quiet dash if they've yet to be
+// judged. Shared by the champion plaque and the ledger rows.
+export function GAccuracy({ avg }: { avg?: number }) {
+  if (avg === undefined) {
+    return <div className="g-acc empty" title="No Rate my G attempts yet">&mdash;</div>;
+  }
   return (
-    <div className="breakdown">
-      {history.length === 0 ? (
-        <div className="bd-empty">No pours yet.</div>
-      ) : (
-        history.map((e) => (
-          <div key={e.id} className={e.type === "undo" ? "bd-item undo" : "bd-item"}>
-            <span className="bd-text">{e.type === "undo" ? "Took one back" : "Split the G"}</span>
-            <span className="bd-time">{timeText(e.ts)}</span>
-          </div>
-        ))
-      )}
+    <div className="g-acc" title="Average Rate my G accuracy">
+      <span className="g-acc-val">{avg}</span>
+      <span className="g-acc-unit">% G</span>
     </div>
   );
 }
