@@ -297,13 +297,18 @@ body { background: var(--stout); }
 
 /* ---------- Rate my G ---------- */
 .rate-g-wrap { display: flex; justify-content: center; }
-.rate-g-btn { width: 100%; min-height: 50px; border-radius: 16px;
-  display: flex; align-items: center; justify-content: center; gap: 10px;
-  background: rgba(11,9,6,0.4); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
-  color: var(--gold-bright); border: 1px solid var(--gold-deep); cursor: pointer;
-  font-family: var(--sans); font-weight: 600; font-size: 12px; letter-spacing: 0.22em; text-transform: uppercase;
+/* Static "settled pint" look: cream head up top, a foam line, stout below —
+   the frozen version of the split-the-G pour. No animation. */
+.rate-g-btn { width: 100%; min-height: 58px; border-radius: 16px; overflow: hidden;
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  background: linear-gradient(to bottom,
+    var(--cream-bright) 0%, var(--cream) 24%,
+    #d6bd85 26%, #0f0a06 28.5%, #1c1108 72%, #0c0704 100%);
+  color: var(--cream-bright); border: 1px solid var(--gold-deep); cursor: pointer;
+  font-family: var(--sans); font-weight: 700; font-size: 12px; letter-spacing: 0.22em; text-transform: uppercase;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.6);
   transition: transform .1s, border-color .15s; }
-.rate-g-btn svg { width: 18px; height: 18px; flex: none; }
+.rate-g-btn svg { width: 25px; height: 25px; flex: none; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.55)); }
 .rate-g-btn:active { transform: scale(0.98); }
 .rate-card { text-align: center; }
 .rate-title { font-family: var(--serif); font-weight: 700; font-size: 26px; color: var(--cream-bright); }
